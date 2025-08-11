@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart PDF Editor - Advanced Text Editing</title>
+    <title>Smart PDF Editor - Direct Text Editing</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -100,26 +100,24 @@
         
         .editable-text {
             position: absolute;
-            border: 1px dashed transparent;
+            border: 1px solid transparent;
             padding: 2px;
             cursor: text;
-            min-width: 20px;
+            min-width: 50px;
             min-height: 20px;
             word-break: break-word;
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.8);
         }
         
         .editable-text:hover {
             border-color: #007bff;
         }
         
-        .editable-text.selected {
-            border-color: #dc3545;
-            background: rgba(220, 53, 69, 0.1);
-        }
-        
         .editable-text:focus {
             outline: 2px solid #007bff;
             border-color: #007bff !important;
+            background: white;
         }
         
         .mobile-toolbar {
@@ -219,7 +217,7 @@
             <div class="toolbar desktop-toolbar">
                 <div class="d-flex flex-wrap align-items-center">
                     <div class="btn-group me-3 mb-2">
-                        <button class="btn btn-outline-primary tool-btn" id="selectTool" title="Select/Move">
+                        <button class="btn btn-outline-primary tool-btn active" id="selectTool" title="Select/Move">
                             <i class="fas fa-mouse-pointer"></i>
                         </button>
                         <button class="btn btn-outline-primary tool-btn" id="textTool" title="Add Text">
@@ -287,7 +285,7 @@
             <!-- Mobile Toolbar -->
             <div class="mobile-toolbar">
                 <div class="d-flex justify-content-around">
-                    <button class="btn btn-sm btn-outline-primary" id="mobileSelect">
+                    <button class="btn btn-sm btn-outline-primary active" id="mobileSelect">
                         <i class="fas fa-mouse-pointer"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-primary" id="mobileText">
@@ -302,45 +300,6 @@
                     <button class="btn btn-sm btn-success" id="mobileDownload">
                         <i class="fas fa-download"></i>
                     </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Text Properties Modal -->
-    <div class="modal fade" id="textModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Text Properties</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Text Content:</label>
-                        <textarea class="form-control" id="textContent" rows="3" placeholder="Enter your text here..."></textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Font Size:</label>
-                            <input type="range" class="form-range" id="fontSize" min="8" max="72" value="16">
-                            <span id="fontSizeValue">16px</span>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Font Family:</label>
-                            <select class="form-select" id="fontFamily">
-                                <option value="Arial">Arial</option>
-                                <option value="Times New Roman">Times New Roman</option>
-                                <option value="Helvetica">Helvetica</option>
-                                <option value="Courier New">Courier New</option>
-                                <option value="Georgia">Georgia</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="applyTextBtn">Apply</button>
                 </div>
             </div>
         </div>
@@ -365,13 +324,10 @@
         let drawings = [];
         let currentDrawing = [];
         let textElements = [];
-        let selectedElement = null;
-        let isDragging = false;
-        let dragOffsetX = 0;
-        let dragOffsetY = 0;
         let scaleFactor = 1.5;
         let undoStack = [];
         let redoStack = [];
+        let nextId = 1;
         
         // DOM Elements
         const fileInput = document.getElementById('fileInput');
@@ -391,8 +347,6 @@
         const nextPage = document.getElementById('nextPage');
         const downloadBtn = document.getElementById('downloadBtn');
         const uploadLoading = document.getElementById('uploadLoading');
-        const fontSizeSlider = document.getElementById('fontSize');
-        const fontSizeValue = document.getElementById('fontSizeValue');
         
         // Tool buttons
         const selectTool = document.getElementById('selectTool');
@@ -455,11 +409,6 @@
             }
         });
         
-        // Font size slider
-        fontSizeSlider.addEventListener('input', () => {
-            fontSizeValue.textContent = fontSizeSlider.value + 'px';
-        });
-        
         // Download
         downloadBtn.addEventListener('click', downloadEditedPDF);
         
@@ -473,9 +422,6 @@
         drawingCanvas.addEventListener('touchstart', handleTouchStart);
         drawingCanvas.addEventListener('touchmove', handleTouchMove);
         drawingCanvas.addEventListener('touchend', handleCanvasMouseUp);
-        
-        // Modal events
-        document.getElementById('applyTextBtn').addEventListener('click', applyTextProperties);
         
         // Mobile toolbar
         document.getElementById('mobileSelect').addEventListener('click', () => setTool('select'));
@@ -491,8 +437,8 @@
         // Core Functions
         function saveState() {
             undoStack.push({
-                textElements: [...textElements],
-                drawings: [...drawings],
+                textElements: JSON.parse(JSON.stringify(textElements)),
+                drawings: JSON.parse(JSON.stringify(drawings)),
                 currentPage: currentPage
             });
             redoStack = [];
@@ -501,14 +447,14 @@
         function undo() {
             if (undoStack.length > 0) {
                 redoStack.push({
-                    textElements: [...textElements],
-                    drawings: [...drawings],
+                    textElements: JSON.parse(JSON.stringify(textElements)),
+                    drawings: JSON.parse(JSON.stringify(drawings)),
                     currentPage: currentPage
                 });
                 
                 const prevState = undoStack.pop();
-                textElements = [...prevState.textElements];
-                drawings = [...prevState.drawings];
+                textElements = JSON.parse(JSON.stringify(prevState.textElements));
+                drawings = JSON.parse(JSON.stringify(prevState.drawings));
                 currentPage = prevState.currentPage;
                 renderPage(currentPage);
             }
@@ -517,14 +463,14 @@
         function redo() {
             if (redoStack.length > 0) {
                 undoStack.push({
-                    textElements: [...textElements],
-                    drawings: [...drawings],
+                    textElements: JSON.parse(JSON.stringify(textElements)),
+                    drawings: JSON.parse(JSON.stringify(drawings)),
                     currentPage: currentPage
                 });
                 
                 const nextState = redoStack.pop();
-                textElements = [...nextState.textElements];
-                drawings = [...nextState.drawings];
+                textElements = JSON.parse(JSON.stringify(nextState.textElements));
+                drawings = JSON.parse(JSON.stringify(nextState.drawings));
                 currentPage = nextState.currentPage;
                 renderPage(currentPage);
             }
@@ -614,11 +560,25 @@
             
             // Update active button
             document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.mobile-toolbar .btn').forEach(btn => btn.classList.remove('active'));
+            
             switch(tool) {
-                case 'select': selectTool.classList.add('active'); break;
-                case 'text': textTool.classList.add('active'); break;
-                case 'draw': drawTool.classList.add('active'); break;
-                case 'eraser': eraserTool.classList.add('active'); break;
+                case 'select': 
+                    selectTool.classList.add('active');
+                    document.getElementById('mobileSelect').classList.add('active');
+                    break;
+                case 'text': 
+                    textTool.classList.add('active');
+                    document.getElementById('mobileText').classList.add('active');
+                    break;
+                case 'draw': 
+                    drawTool.classList.add('active');
+                    document.getElementById('mobileDraw').classList.add('active');
+                    break;
+                case 'eraser': 
+                    eraserTool.classList.add('active');
+                    document.getElementById('mobileEraser').classList.add('active');
+                    break;
             }
             
             // Set cursor and mode
@@ -635,12 +595,6 @@
                 drawingCanvas.style.cursor = 'default';
                 eraserPreview.style.display = 'none';
             }
-            
-            // Deselect any selected element
-            if (selectedElement) {
-                selectedElement.classList.remove('selected');
-                selectedElement = null;
-            }
         }
         
         function handleCanvasMouseDown(e) {
@@ -651,47 +605,15 @@
             const x = (e.clientX - rect.left) * scaleX;
             const y = (e.clientY - rect.top) * scaleY;
             
-            if (currentTool === 'select') {
-                // Check if clicking on a text element
-                const elements = document.elementsFromPoint(e.clientX, e.clientY);
-                let clickedText = null;
-                
-                for (let el of elements) {
-                    if (el.classList.contains('editable-text') && el.parentElement === editOverlay) {
-                        clickedText = el;
-                        break;
-                    }
-                }
-                
-                if (clickedText) {
-                    // Select the text element
-                    if (selectedElement) {
-                        selectedElement.classList.remove('selected');
-                    }
-                    selectedElement = clickedText;
-                    selectedElement.classList.add('selected');
-                    selectedElement.focus();
-                    
-                    // Enable dragging
-                    isDragging = true;
-                    const rect = selectedElement.getBoundingClientRect();
-                    dragOffsetX = e.clientX - rect.left;
-                    dragOffsetY = e.clientY - rect.top;
-                } else {
-                    // Deselect if clicking elsewhere
-                    if (selectedElement) {
-                        selectedElement.classList.remove('selected');
-                        selectedElement = null;
-                    }
-                }
-            } else if (currentTool === 'text') {
-                // Add new text element
+            if (currentTool === 'text') {
+                // Add new text element at click position
                 addNewTextElement(x, y);
             } else if (currentTool === 'draw') {
                 startDrawing(e);
             } else if (currentTool === 'eraser') {
                 eraseElementAt(x, y);
             }
+            // For select tool, let the text element handle its own events
         }
         
         function handleCanvasMouseMove(e) {
@@ -709,42 +631,12 @@
                 eraserPreview.style.display = 'block';
             }
             
-            if (isDragging && selectedElement) {
-                // Drag the selected element
-                selectedElement.style.left = (x - dragOffsetX * (scaleFactor)) + 'px';
-                selectedElement.style.top = (y - dragOffsetY * (scaleFactor)) + 'px';
-                
-                // Update the text element data
-                const id = parseInt(selectedElement.dataset.id);
-                const element = textElements.find(el => el.id === id && el.page === currentPage);
-                if (element) {
-                    element.x = x - dragOffsetX * (scaleFactor);
-                    element.y = y - dragOffsetY * (scaleFactor);
-                }
-            } else if (drawingMode && isDrawing) {
+            if (drawingMode && isDrawing) {
                 draw(e);
             }
         }
         
         function handleCanvasMouseUp(e) {
-            if (isDragging) {
-                isDragging = false;
-                if (selectedElement) {
-                    // Update final position
-                    const rect = selectedElement.getBoundingClientRect();
-                    const overlayRect = editOverlay.getBoundingClientRect();
-                    const x = rect.left - overlayRect.left;
-                    const y = rect.top - overlayRect.top;
-                    
-                    const id = parseInt(selectedElement.dataset.id);
-                    const element = textElements.find(el => el.id === id && el.page === currentPage);
-                    if (element) {
-                        element.x = x;
-                        element.y = y;
-                    }
-                }
-            }
-            
             if (isDrawing) {
                 stopDrawing();
             }
@@ -815,7 +707,7 @@
                     points: [...currentDrawing],
                     color: currentColor,
                     page: currentPage,
-                    id: Date.now()
+                    id: nextId++
                 });
             }
             isDrawing = false;
@@ -845,8 +737,8 @@
         
         function addNewTextElement(x, y) {
             const textElement = {
-                id: Date.now(),
-                text: 'Double click to edit',
+                id: nextId++,
+                text: 'Type here...',
                 x: x,
                 y: y,
                 fontSize: 16,
@@ -862,9 +754,13 @@
             setTimeout(() => {
                 const element = document.querySelector(`[data-id="${textElement.id}"]`);
                 if (element) {
-                    element.classList.add('selected');
-                    selectedElement = element;
                     element.focus();
+                    // Select all text for easy replacement
+                    const range = document.createRange();
+                    range.selectNodeContents(element);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
                 }
             }, 100);
         }
@@ -887,13 +783,7 @@
                 textDiv.style.color = element.color;
                 textDiv.contentEditable = true;
                 
-                // Double click to edit properties
-                textDiv.addEventListener('dblclick', (e) => {
-                    e.stopPropagation();
-                    openTextProperties(element);
-                });
-                
-                // Update text element when content changes
+                // Handle text input
                 textDiv.addEventListener('input', () => {
                     const id = parseInt(textDiv.dataset.id);
                     const el = textElements.find(item => item.id === id && item.page === currentPage);
@@ -902,37 +792,30 @@
                     }
                 });
                 
-                // Prevent dragging when editing text
-                textDiv.addEventListener('mousedown', (e) => {
-                    e.stopPropagation();
+                // Handle key events
+                textDiv.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        document.execCommand('insertHTML', false, '<br><br>');
+                    }
+                });
+                
+                // Handle blur (lose focus)
+                textDiv.addEventListener('blur', () => {
+                    const id = parseInt(textDiv.dataset.id);
+                    const el = textElements.find(item => item.id === id && item.page === currentPage);
+                    if (el) {
+                        el.text = textDiv.textContent;
+                    }
+                });
+                
+                // Prevent default drag behavior
+                textDiv.addEventListener('dragstart', (e) => {
+                    e.preventDefault();
                 });
                 
                 editOverlay.appendChild(textDiv);
             });
-        }
-        
-        function openTextProperties(element) {
-            document.getElementById('textContent').value = element.text;
-            document.getElementById('fontSize').value = element.fontSize;
-            document.getElementById('fontSizeValue').textContent = element.fontSize + 'px';
-            document.getElementById('fontFamily').value = element.fontFamily;
-            
-            // Store reference to element being edited
-            openTextProperties.currentElement = element;
-            
-            new bootstrap.Modal(document.getElementById('textModal')).show();
-        }
-        
-        function applyTextProperties() {
-            const element = openTextProperties.currentElement;
-            if (!element) return;
-            
-            element.text = document.getElementById('textContent').value;
-            element.fontSize = parseInt(document.getElementById('fontSize').value);
-            element.fontFamily = document.getElementById('fontFamily').value;
-            
-            renderTextElements();
-            bootstrap.Modal.getInstance(document.getElementById('textModal')).hide();
         }
         
         function eraseElementAt(x, y) {
@@ -941,7 +824,7 @@
             textElements.forEach((element, index) => {
                 if (element.page !== currentPage) return;
                 
-                // Simple distance check (you can make this more sophisticated)
+                // Simple distance check
                 const distance = Math.sqrt(
                     Math.pow(element.x - x, 2) + Math.pow(element.y - y, 2)
                 );
