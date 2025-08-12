@@ -1,2 +1,354 @@
-{"name":"Advanced PDF Editor - React App","type":"code/react","content":"/\nAdvanced PDF Editor - Single File React App\n\nThis file contains:\n1) README and setup instructions\n2) Frontend React application (default export) using Tailwind CSS\n3) Example backend (Node/Express) API endpoints for upload/save\n\nDependencies (frontend):\n- react, react-dom\n- tailwindcss (configured)\n- pdfjs-dist\n- pdf-lib\n- react-draggable\n- react-color (for color picker)\n- axios\n\nDependencies (backend example):\n- express\n- multer\n- pdf-lib\n- cors\n\nSetup (brief):\n1. Create React app (Vite/CRA) and enable Tailwind.\n2. Install packages: npm i pdfjs-dist pdf-lib react-draggable react-color axios\n3. Add the backend example in a separate folder and run node server/index.js\n\nNotes on functionality and limitations:\n- "Erase" works by adding redaction overlays (vector rectangles) on top of the page and then when exporting, the backend or frontend uses pdf-lib to draw filled rectangles to conceal underlying content. True vector content removal is non-trivial in PDFs and often requires complex content stream editing — this overlay approach preserves document integrity while achieving the visual effect.\n- Fonts: we attempt to match/auto-detect common fonts. When embedding text on export, we use pdf-lib's standard fonts or allow custom font uploads.\n- Performance: pages are rendered with pdf.js into canvases; overlays are separate DOM layers (CSS positioned) for minimal re-render cost.\n\n--------------------------------------------------------------------------------\nBelow is the React component code. Save it as src/App.jsx (or similar) in your React project.\n--------------------------------------------------------------------------------\n/\n\nimport React, { useEffect, useRef, useState, useCallback } from "react";\nimport { PDFDocument, rgb, StandardFonts } from "pdf-lib";\nimport * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";\nimport Draggable from "react-draggable";\nimport axios from "axios";\nimport { SketchPicker } from "react-color";\n\n// NOTE: If your bundler has trouble with pdfjs worker path, set workerSrc like:\n// pdfjsLib.GlobalWorkerOptions.workerSrc = require('pdfjs-dist/build/pdf.worker.entry');\n\nexport default function AdvancedPdfEditor() {\n  const [pdfFile, setPdfFile] = useState(null);\n  const [pdfDoc, setPdfDoc] = useState(null);\n  const [pageCount, setPageCount] = useState(0);\n  const [pages, setPages] = useState([]); // {width,height,canvasRef}\n  const containerRef = useRef(null);\n\n  // Tools & UI state\n  const [activeTool, setActiveTool] = useState("select"); // select, addText, erase\n  const [selectedPage, setSelectedPage] = useState(1);\n  const [textBoxes, setTextBoxes] = useState([]); // {id,page,x,y,width,fontSize,font,color,text,z}\n  const [redactions, setRedactions] = useState([]); // {id,page,x,y,w,h}\n  const [fontFamily, setFontFamily] = useState("Helvetica");\n  const [fontSize, setFontSize] = useState(18);\n  const [fontBold, setFontBold] = useState(false);\n  const [fontItalic, setFontItalic] = useState(false);\n  const [fontColor, setFontColor] = useState("#000000");\n  const [showColorPicker, setShowColorPicker] = useState(false);\n  const [history, setHistory] = useState([]);\n  const [future, setFuture] = useState([]);\n\n  // Simple id generator\n  const idRef = useRef(1);\n  const nextId = useCallback(() => idRef.current++, []);\n\n  // Load PDF file (File input)\n  const onFileChange = async (e) => {\n    const file = e.target.files?.[0];\n    if (!file) return;\n    const arrayBuffer = await file.arrayBuffer();\n    setPdfFile(arrayBuffer);\n    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });\n    const pdf = await loadingTask.promise;\n    setPdfDoc(pdf);\n    setPageCount(pdf.numPages);\n    const pageInfos = [];\n\n    for (let i = 1; i <= pdf.numPages; i++) {\n      const page = await pdf.getPage(i);\n      const viewport = page.getViewport({ scale: 1.5 });\n      const canvas = document.createElement("canvas");\n      canvas.width = viewport.width;\n      canvas.height = viewport.height;\n      const ctx = canvas.getContext("2d");\n      await page.render({ canvasContext: ctx, viewport }).promise;\n      pageInfos.push({ pageNumber: i, width: viewport.width, height: viewport.height, canvas });\n    }\n    setPages(pageInfos);\n    pushHistory({ type: "load", payload: { pageCount: pdf.numPages } });\n  };\n\n  // Add a text box to selected page\n  const addTextBox = () => {\n    const id = nextId();\n    const pageInfo = pages.find((p) => p.pageNumber === selectedPage);\n    const newBox = {\n      id,\n      page: selectedPage,\n      x: 50,\n      y: 50,\n      width: 200,\n      fontSize: fontSize,\n      fontFamily: fontFamily,\n      bold: fontBold,\n      italic: fontItalic,\n      color: fontColor,\n      text: "New text",\n      z: (textBoxes.length ? Math.max(...textBoxes.map(t=>t.z)) : 0) + 1,\n    };\n    setTextBoxes((s) => [...s, newBox]);\n    pushHistory({ type: "addText", payload: newBox });\n  };\n\n  // Add redaction (erase) rectangle\n  const addRedaction = (page, x, y, w, h) => {\n    const id = nextId();\n    const rect = { id, page, x, y, w, h };\n    setRedactions((r) => [...r, rect]);\n    pushHistory({ type: "addRedaction", payload: rect });\n  };\n\n  // Undo/Redo\n  const pushHistory = (action) => {\n    setHistory((h) => [...h, action]);\n    setFuture([]);\n  };\n\n  const undo = () => {\n    setHistory((h) => {\n      if (!h.length) return h;\n      const copy = [...h];\n      const last = copy.pop();\n      setFuture((f) => [last, ...f]);\n      applyInverse(last);\n      return copy;\n    });\n  };\n\n  const redo = () => {\n    setFuture((f) => {\n      if (!f.length) return f;\n      const [first, ...rest] = f;\n      applyAction(first);\n      setHistory((h) => [...h, first]);\n      return rest;\n    });\n  };\n\n  const applyInverse = (action) => {\n    // Simple inverse operations for common actions\n    if (!action) return;\n    const { type, payload } = action;\n    if (type === "addText") setTextBoxes((t) => t.filter((tb) => tb.id !== payload.id));\n    if (type === "addRedaction") setRedactions((r) => r.filter((rr) => rr.id !== payload.id));\n    // TODO: Add more inverses (move, edit)\n  };\n\n  const applyAction = (action) => {\n    if (!action) return;\n    const { type, payload } = action;\n    if (type === "addText") setTextBoxes((t) => [...t, payload]);\n    if (type === "addRedaction") setRedactions((r) => [...r, payload]);\n  };\n\n  // Save/export: integrate overlays into the PDF and return file for download\n  const exportPdf = async () => {\n    if (!pdfFile) return;\n    // We will use pdf-lib to load the original bytes and then draw overlays/text onto pages\n    const existingPdfBytes = pdfFile;\n    const pdfDocLib = await PDFDocument.load(existingPdfBytes);\n\n    // embed a standard font\n    const helvetica = await pdfDocLib.embedFont(StandardFonts.Helvetica);\n\n    // For each text box, draw on the page\n    for (const tb of textBoxes) {\n      const pageIndex = tb.page - 1;\n      if (pageIndex < 0 || pageIndex >= pdfDocLib.getPageCount()) continue;\n      const page = pdfDocLib.getPage(pageIndex);\n      // convert from css coords to PDF points - we rely on pdf.js canvas size so assume same dimensions\n      const pageInfo = pages.find(p => p.pageNumber === tb.page);\n      if (!pageInfo) continue;\n      // pdf-lib uses points with origin bottom-left; our overlay uses top-left\n      const pdfHeight = page.getSize().height;\n      const x = tb.x;\n      const y = pdfHeight - tb.y - tb.fontSize; // approximate\n      page.drawText(tb.text || "", {\n        x,\n        y,\n        size: tb.fontSize,\n        font: helvetica,\n        color: rgb(...hexToRgbNormalized(tb.color)),\n      });\n    }\n\n    // For each redaction, draw filled rectangle (black or white depending on background)\n    for (const r of redactions) {\n      const pageIndex = r.page - 1;\n      const page = pdfDocLib.getPage(pageIndex);\n      const pdfHeight = page.getSize().height;\n      const x = r.x;\n      const y = pdfHeight - r.y - r.h;\n      page.drawRectangle({ x, y, width: r.w, height: r.h, color: rgb(0, 0, 0) });\n    }\n\n    const newPdfBytes = await pdfDocLib.save();\n\n    // Trigger browser download\n    const blob = new Blob([newPdfBytes], { type: "application/pdf" });\n    const url = URL.createObjectURL(blob);\n    const a = document.createElement("a");\n    a.href = url;\n    a.download = "edited.pdf";\n    a.click();\n    URL.revokeObjectURL(url);\n  };\n\n  // Helper: convert hex color to rgb array normalized\n  function hexToRgbNormalized(hex) {\n    const h = hex.replace('#', '');\n    const bigint = parseInt(h, 16);\n    const r = (bigint >> 16) & 255;\n    const g = (bigint >> 8) & 255;\n    const b = bigint & 255;\n    return [r/255, g/255, b/255];\n  }\n\n  // Layering functions\n  const bringForward = (id) => {\n    setTextBoxes((t) => {\n      const copy = [...t];\n      const maxZ = Math.max(...copy.map(c=>c.z));\n      const idx = copy.findIndex(c=>c.id===id);\n      if (idx>=0) copy[idx].z = maxZ + 1;\n      return copy;\n    });\n  };\n  const sendBackward = (id) => {\n    setTextBoxes((t) => {\n      const copy = [...t];\n      const idx = copy.findIndex(c=>c.id===id);\n      if (idx>=0) copy[idx].z = Math.min(...copy.map(c=>c.z)) - 1;\n      return copy;\n    });\n  };\n\n  // Draw interaction layer: clicking while in erase mode adds redaction rectangles\n  const onCanvasClick = (e, pageNumber) => {\n    if (activeTool !== 'erase') return;\n    // compute relative coords\n    const container = containerRef.current;\n    const pageNode = e.currentTarget;\n    const rect = pageNode.getBoundingClientRect();\n    const x = e.clientX - rect.left;\n    const y = e.clientY - rect.top;\n    // for simplicity, fixed-size redaction; in practice you'd drag to draw size\n    addRedaction(pageNumber, x - 25, y - 10, 100, 30);\n  };\n\n  // Save/load workspace (optional)\n  const saveWorkspace = () => {\n    const workspace = { textBoxes, redactions };\n    localStorage.setItem('pdf-editor-workspace', JSON.stringify(workspace));\n  };\n  const loadWorkspace = () => {\n    const ws = localStorage.getItem('pdf-editor-workspace');\n    if (!ws) return;\n    const parsed = JSON.parse(ws);\n    setTextBoxes(parsed.textBoxes || []);\n    setRedactions(parsed.redactions || []);\n  };\n\n  // Simple UI\n  return (\n    <div className="min-h-screen bg-gray-50 p-4">\n      <div className="max-w-7xl mx-auto">\n        <header className="flex items-center justify-between mb-4">\n          <h1 className="text-2xl font-semibold">Advanced PDF Editor Studio</h1>\n          <div className="flex gap-2 items-center">\n            <input type="file" accept="application/pdf" onChange={onFileChange} />\n            <button className="px-3 py-1 rounded bg-blue-600 text-white" onClick={exportPdf}>Export PDF</button>\n            <button className="px-3 py-1 rounded border" onClick={undo}>Undo</button>\n            <button className="px-3 py-1 rounded border" onClick={redo}>Redo</button>\n          </div>\n        </header>\n\n        <div className="flex gap-4">\n          {/* Left panel - tools /}\n          <aside className="w-72 bg-white p-3 rounded shadow">\n            <h2 className="font-medium mb-2">Tools</h2>\n            <div className="flex flex-col gap-2">\n              <button className={py-2 rounded ${activeTool==='select'?'bg-gray-200':''}} onClick={()=>setActiveTool('select')}>Select</button>\n              <button className={py-2 rounded ${activeTool==='addText'?'bg-gray-200':''}} onClick={()=>{setActiveTool('addText'); addTextBox();}}>Add Text</button>\n              <button className={py-2 rounded ${activeTool==='erase'?'bg-gray-200':''}} onClick={()=>setActiveTool('erase')}>Erase (Redact)</button>\n            </div>\n\n            <hr className="my-3" />\n            <div>\n              <label className="block text-sm">Font</label>\n              <select value={fontFamily} onChange={(e)=>setFontFamily(e.target.value)} className="w-full border p-1 rounded">\n                <option>Helvetica</option>\n                <option>Times-Roman</option>\n                <option>Courier</option>\n              </select>\n              <label className="block text-sm mt-2">Size</label>\n              <input type="number" value={fontSize} onChange={(e)=>setFontSize(parseInt(e.target.value||18))} className="w-full border p-1 rounded" />\n              <div className="flex gap-2 mt-2">\n                <button onClick={()=>setFontBold(!fontBold)} className={px-2 py-1 border rounded ${fontBold?'bg-gray-200':''}}>B</button>\n                <button onClick={()=>setFontItalic(!fontItalic)} className={px-2 py-1 border rounded ${fontItalic?'bg-gray-200':''}}>I</button>\n                <div>\n                  <button onClick={()=>setShowColorPicker(!showColorPicker)} className="px-2 py-1 border rounded">Color</button>\n                  {showColorPicker && <div className="absolute z-50 mt-2"><SketchPicker color={fontColor} onChange={(c)=>setFontColor(c.hex)} /></div>}\n                </div>\n              </div>\n            </div>\n\n            <hr className="my-3" />\n            <div>\n              <h3 className="font-medium">Layering</h3>\n              <p className="text-sm">Select a text box on canvas to bring forward / send backward.</p>\n            </div>\n\n            <hr className="my-3" />\n            <div className="flex gap-2">\n              <button className="px-3 py-1 border rounded" onClick={saveWorkspace}>Save WS</button>\n              <button className="px-3 py-1 border rounded" onClick={loadWorkspace}>Load WS</button>\n            </div>\n\n          </aside>\n\n          {/ Canvas area /}\n          <main className="flex-1 bg-white p-3 rounded shadow" ref={containerRef}>\n            <div className="flex items-center gap-3 mb-3">\n              <label>Page:</label>\n              <select value={selectedPage} onChange={(e)=>setSelectedPage(parseInt(e.target.value))} className="border p-1 rounded">\n                {pages.map(p=> <option key={p.pageNumber} value={p.pageNumber}>Page {p.pageNumber}</option>)}\n              </select>\n            </div>\n\n            <div className="space-y-6">\n              {pages.map((p) => (\n                <div key={p.pageNumber} className="relative border p-2 inline-block" onClick={(e)=>onCanvasClick(e, p.pageNumber)}>\n                  <div style={{ width: p.width, height: p.height, position: 'relative' }}>\n                    {/ base PDF canvas /}\n                    <div dangerouslySetInnerHTML={{ __html: '' }} />\n                    <div style={{ position: 'absolute', left: 0, top: 0 }}>\n                      {/ Render the rasterized canvas /}\n                      <div ref={(el)=>{\n                        if (el && el.childElementCount===0) {\n                          el.appendChild(p.canvas);\n                        }\n                      }} />\n                    </div>\n\n                    {/ overlay for text boxes and redactions /}\n                    <div style={{position:'absolute', left:0, top:0, width:p.width, height:p.height, pointerEvents:'none'}}>\n                      {/ Redactions (erase) /}\n                      {redactions.filter(r=>r.page===p.pageNumber).map(r=> (\n                        <div key={r.id} style={{ position:'absolute', left:r.x, top:r.y, width:r.w, height:r.h, backgroundColor:'black', opacity:1, pointerEvents:'none' }} />\n                      ))}\n\n                      {/ Text boxes (draggable) /}\n                      <div style={{position:'absolute', left:0, top:0}}>\n                        {textBoxes.filter(tb=>tb.page===p.pageNumber).sort((a,b)=>a.z-b.z).map(tb=> (\n                          <Draggable key={tb.id} defaultPosition={{x:tb.x,y:tb.y}} onStop={(e,data)=>{\n                            // update textbox position\n                            setTextBoxes((arr)=>arr.map(it=> it.id===tb.id ? {...it, x:data.x, y:data.y} : it));\n                          }}>\n                            <div style={{ pointerEvents:'auto', position:'absolute', zIndex:tb.z, cursor:'move', minWidth: tb.width }}>\n                              <div style={{ padding:6, border:'1px dashed #ccc', backgroundColor:'rgba(255,255,255,0.6)'}}>\n                                <div contentEditable suppressContentEditableWarning onBlur={(e)=>{\n                                  const newText = e.target.innerText;\n                                  setTextBoxes((arr)=>arr.map(it=> it.id===tb.id ? {...it, text:newText} : it));\n                                }} style={{ fontSize: tb.fontSize, fontFamily: tb.fontFamily, fontStyle: tb.italic?'italic':'normal', fontWeight: tb.bold?'700':'400', color: tb.color }}>\n                                  {tb.text}\n                                </div>\n                                <div className="flex gap-1 mt-1">\n                                  <button className="px-1 py-0.5 border text-xs" onClick={()=>bringForward(tb.id)}>Bring forward</button>\n                                  <button className="px-1 py-0.5 border text-xs" onClick={()=>sendBackward(tb.id)}>Send backward</button>\n                                  <button className="px-1 py-0.5 border text-xs" onClick={()=>{\n                                    setTextBoxes((arr)=>arr.filter(it=>it.id!==tb.id));\n                                  }}>Delete</button>\n                                </div>\n                              </div>\n                            </div>\n                          </Draggable>\n                        ))}\n                      </div>\n\n                    </div>\n\n                  </div>\n                </div>\n              ))}\n            </div>\n\n          </main>\n        </div>\n\n        <footer className="mt-6 text-sm text-gray-600">This editor uses PDF.js for rendering and pdf-lib for edits. For production, harden security, sandbox the PDF worker, validate uploads, and run malware scanning on uploaded files.</footer>\n      </div>\n    </div>\n  );\n}\n\n/\n--------------------------------------------------------------------------------\nExample backend (server/index.js) - save this as a separate file and run with node\n--------------------------------------------------------------------------------\n\n// npm i express multer cors pdf-lib\nconst express = require('express');\nconst multer = require('multer');\nconst cors = require('cors');\nconst { PDFDocument } = require('pdf-lib');\nconst fs = require('fs');\n\nconst upload = multer({ dest: 'uploads/' });\nconst app = express();\napp.use(cors());\napp.use(express.json({ limit: '50mb' }));\n\napp.post('/api/upload', upload.single('file'), (req, res) => {\n  // store file temporarily and return a token or path\n  res.json({ path: req.file.path, originalName: req.file.originalname });\n});\n\napp.post('/api/save', async (req, res) => {\n  // body: { pdfPath, textBoxes, redactions }\n  const { pdfPath, textBoxes, redactions } = req.body;\n  const existingBytes = fs.readFileSync(pdfPath);\n  const pdfDoc = await PDFDocument.load(existingBytes);\n  const helvetica = await pdfDoc.embedFont(PDFDocument.PDFName.of('Helvetica'));\n  // (similar to frontend export logic) - draw text + rectangles\n  const newBytes = await pdfDoc.save();\n  const outPath = pdfPath + '.edited.pdf';\n  fs.writeFileSync(outPath, newBytes);\n  res.download(outPath, 'edited.pdf', (err) => {\n    // optional cleanup\n  });\n});\n\napp.listen(4000, ()=>console.log('Server running on 4000'));\n\nSecurity & performance notes:\n- Validate uploads, limit size, and sanitize everything.\n- Use streaming for large PDFs.\n- Offload heavy processing to background workers if needed.\n\nUI / UX Enhancements you can add:\n- Freehand redaction drawing (click+drag) with live preview of the redaction shape\n- Smart font matching by inspecting PDF font resources and choosing a closest match\n- Text snapping, alignment guides, and rulers\n- Multi-select and group operations\n- Compression and incremental saving\n- User accounts and document history with server-side versioning\n\n*/"}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Advanced PDF Editor — HTML Demo</title>
 
+  <!-- Tailwind CDN for rapid styling (Replace with build-time Tailwind for production) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- PDF.js (for rendering) and pdf-lib (for editing/export) -->
+  <script src="https://unpkg.com/pdfjs-dist@3.9.179/legacy/build/pdf.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
+  <style>
+    /* small helpers */
+    .page-wrap { position: relative; display: inline-block; }
+    .overlay { position: absolute; left: 0; top: 0; pointer-events: none; }
+    .text-box { position: absolute; pointer-events: auto; background: rgba(255,255,255,0.8); border: 1px dashed #999; padding: 6px; min-width: 80px; border-radius: 4px; }
+    .redaction { position: absolute; background: black; pointer-events: auto; border-radius: 2px; }
+    .canvas-container { overflow-x: auto; }
+    /* small responsive tweak for the color input on some browsers */
+    input[type="color"] { padding: 2px; height: 38px; }
+  </style>
+</head>
+<body class="bg-gray-100 text-slate-800">
+  <div class="max-w-7xl mx-auto p-4">
+    <header class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-semibold">Advanced PDF Editor — HTML Demo</h1>
+      <div class="flex gap-2">
+        <input id="fileInput" type="file" accept="application/pdf" />
+        <button id="exportBtn" class="px-3 py-1 bg-blue-600 text-white rounded">Export PDF</button>
+        <button id="undoBtn" class="px-3 py-1 border rounded">Undo</button>
+        <button id="redoBtn" class="px-3 py-1 border rounded">Redo</button>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-12 gap-4">
+      <!-- Tools -->
+      <aside class="col-span-12 md:col-span-3 bg-white p-3 rounded shadow">
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium">Tool</label>
+            <div class="mt-2 flex gap-2">
+              <button data-tool="select" class="tool-btn px-3 py-1 border rounded">Select</button>
+              <button data-tool="text" class="tool-btn px-3 py-1 border rounded">Add Text</button>
+              <button data-tool="erase" class="tool-btn px-3 py-1 border rounded">Erase</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium">Font family</label>
+            <select id="fontFamily" class="w-full border p-1 rounded mt-1">
+              <option value="Helvetica">Helvetica</option>
+              <option value="Times-Roman">Times New Roman</option>
+              <option value="Courier">Courier</option>
+              <option value="Arial">Arial</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-sm">Size</label>
+              <input id="fontSize" type="number" value="18" class="w-full border p-1 rounded mt-1" />
+            </div>
+            <div>
+              <label class="block text-sm">Bold</label>
+              <input id="fontBold" type="checkbox" class="mt-3" />
+            </div>
+            <div>
+              <label class="block text-sm">Italic</label>
+              <input id="fontItalic" type="checkbox" class="mt-3" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm">Color</label>
+            <input id="fontColor" type="color" value="#000000" class="w-full mt-1" />
+          </div>
+
+          <div>
+            <label class="block text-sm">Layering</label>
+            <div class="mt-2 flex gap-2">
+              <button id="bringForwardBtn" class="px-2 py-1 border rounded">Bring Forward</button>
+              <button id="sendBackwardBtn" class="px-2 py-1 border rounded">Send Back</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm">Workspace</label>
+            <div class="mt-2 flex gap-2">
+              <button id="saveWs" class="px-2 py-1 border rounded">Save</button>
+              <button id="loadWs" class="px-2 py-1 border rounded">Load</button>
+            </div>
+          </div>
+
+          <div class="text-xs text-gray-500">Notes: This demo uses a raster preview (PDF.js) and pdf-lib for export. For production, use server-side validation, sandboxed workers, and stronger PDF content handling.</div>
+        </div>
+      </aside>
+
+      <!-- Canvas area -->
+      <main class="col-span-12 md:col-span-9 bg-white p-3 rounded shadow">
+        <div class="mb-2 flex items-center gap-3">
+          <label class="text-sm">Page</label>
+          <select id="pageSelect" class="border p-1 rounded"></select>
+        </div>
+
+        <div id="canvasArea" class="canvas-container border p-3 rounded min-h-[400px] flex flex-col items-start gap-4"></div>
+      </main>
+    </div>
+
+    <footer class="mt-6 text-sm text-gray-600">Tip: Drag text boxes to move them. In erase mode click-and-drag to draw a redaction rectangle.</footer>
+  </div>
+
+  <script>
+    // --- Globals and state ---
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.9.179/legacy/build/pdf.worker.min.js';
+
+    const state = {
+      pdfBytes: null,
+      pdfDoc: null, // pdf.js doc
+      pages: [], // {pageNumber, width, height, canvas}
+      currentPage: 1,
+      textBoxes: [], // {id,page,x,y,width,fontSize,fontFamily,bold,italic,color,text,z}
+      redactions: [], // {id,page,x,y,w,h}
+      tool: 'select',
+      nextId: 1,
+      history: [],
+      future: [],
+      selectedBoxId: null,
+    };
+
+    // Helpers
+    const $ = (id) => document.getElementById(id);
+    function uid(){ return state.nextId++; }
+
+    // File input
+    $('fileInput').addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const arrayBuffer = await file.arrayBuffer();
+      state.pdfBytes = arrayBuffer;
+      await loadPdf(arrayBuffer);
+      renderPageSelect();
+      renderCanvasArea();
+      pushHistory({type:'load'});
+    });
+
+    // Tool buttons
+    document.querySelectorAll('.tool-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('bg-gray-200'));
+        btn.classList.add('bg-gray-200');
+        state.tool = btn.dataset.tool;
+        // Re-render so erase tool attaches drawing handlers
+        renderCanvasArea();
+      });
+    });
+
+    // Default select
+    document.querySelector('.tool-btn[data-tool="select"]').classList.add('bg-gray-200');
+
+    // Load PDF via pdf.js and rasterize pages
+    async function loadPdf(arrayBuffer){
+      const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+      const pdf = await loadingTask.promise;
+      state.pdfDoc = pdf;
+      state.pages = [];
+      for(let i=1;i<=pdf.numPages;i++){
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({scale: 1.5});
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({canvasContext: ctx, viewport}).promise;
+        state.pages.push({pageNumber: i, width: viewport.width, height: viewport.height, canvas});
+      }
+      state.currentPage = 1;
+    }
+
+    function renderPageSelect(){
+      const sel = $('pageSelect');
+      sel.innerHTML = '';
+      state.pages.forEach(p=>{ const o = document.createElement('option'); o.value = p.pageNumber; o.textContent = 'Page '+p.pageNumber; sel.appendChild(o); });
+      sel.value = state.currentPage;
+      sel.addEventListener('change', ()=>{ state.currentPage = parseInt(sel.value); renderCanvasArea(); });
+    }
+
+    // Render canvas and overlays for all pages (inlined)
+    function renderCanvasArea(){
+      const area = $('canvasArea');
+      area.innerHTML = '';
+      state.pages.forEach(p=>{
+        const wrap = document.createElement('div');
+        wrap.className = 'page-wrap';
+        wrap.style.width = p.width + 'px';
+        wrap.style.height = p.height + 'px';
+        wrap.dataset.page = p.pageNumber;
+
+        // base canvas
+        const base = p.canvas.cloneNode(true);
+        base.style.display = 'block';
+        wrap.appendChild(base);
+
+        // overlay container
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        overlay.style.width = p.width + 'px';
+        overlay.style.height = p.height + 'px';
+        overlay.style.left = '0px'; overlay.style.top = '0px';
+        overlay.style.pointerEvents = 'none';
+        wrap.appendChild(overlay);
+
+        // render redactions for this page
+        state.redactions.filter(r=>r.page===p.pageNumber).forEach(r=>{
+          const d = document.createElement('div'); d.className='redaction'; d.style.left=r.x+'px'; d.style.top=r.y+'px'; d.style.width=r.w+'px'; d.style.height=r.h+'px'; d.style.pointerEvents='auto'; d.dataset.rid = r.id;
+          // allow removal on double click
+          d.addEventListener('dblclick', ()=>{ state.redactions = state.redactions.filter(rr=>rr.id!==r.id); pushHistory({type:'delRedact', payload:r}); renderCanvasArea(); });
+          overlay.appendChild(d);
+        });
+
+        // render text boxes for this page
+        const texts = state.textBoxes.filter(t=>t.page===p.pageNumber).sort((a,b)=>a.z-b.z);
+        texts.forEach(tb=>{
+          const el = document.createElement('div');
+          el.className='text-box';
+          el.contentEditable = true;
+          el.innerText = tb.text || 'New text';
+          el.style.left = tb.x + 'px'; el.style.top = tb.y + 'px'; el.style.minWidth = (tb.width||120) + 'px';
+          el.style.fontSize = tb.fontSize + 'px';
+          el.style.fontFamily = tb.fontFamily;
+          el.style.fontWeight = tb.bold ? '700' : '400';
+          el.style.fontStyle = tb.italic ? 'italic' : 'normal';
+          el.style.color = tb.color;
+          el.style.pointerEvents = 'auto';
+          el.dataset.tid = tb.id;
+
+          // selection outline
+          el.addEventListener('click', (ev)=>{
+            ev.stopPropagation();
+            selectBox(tb.id);
+          });
+
+          el.addEventListener('input', (ev)=>{
+            tb.text = el.innerText;
+          });
+
+          // simple drag
+          makeDraggable(el, (x,y)=>{ tb.x = x; tb.y = y; });
+
+          overlay.appendChild(el);
+        });
+
+        // when in erase tool, allow drawing redaction rectangles on this page
+        if(state.tool === 'erase'){
+          let isDown = false; let startX=0, startY=0; let tempRect = null;
+          base.style.cursor = 'crosshair';
+          base.addEventListener('mousedown', mdown);
+          function mdown(e){
+            isDown = true; const rect = base.getBoundingClientRect(); startX = e.clientX - rect.left; startY = e.clientY - rect.top;
+            tempRect = document.createElement('div'); tempRect.className='redaction'; tempRect.style.opacity = 0.6; tempRect.style.left = startX+'px'; tempRect.style.top = startY+'px'; tempRect.style.width='0px'; tempRect.style.height='0px'; tempRect.style.pointerEvents = 'none'; overlay.appendChild(tempRect);
+            window.addEventListener('mousemove', mmove);
+            window.addEventListener('mouseup', mup);
+          }
+          function mmove(e){ if(!isDown) return; const rect = base.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top; const w = Math.abs(cx - startX); const h = Math.abs(cy - startY); tempRect.style.left = Math.min(cx,startX)+'px'; tempRect.style.top = Math.min(cy,startY)+'px'; tempRect.style.width = w+'px'; tempRect.style.height = h+'px'; }
+          function mup(e){ if(!isDown) return; isDown=false; window.removeEventListener('mousemove', mmove); window.removeEventListener('mouseup', mup); tempRect.style.pointerEvents = 'auto'; // finalize
+            const id = uid(); const x = parseFloat(tempRect.style.left); const y = parseFloat(tempRect.style.top); const w = parseFloat(tempRect.style.width); const h = parseFloat(tempRect.style.height);
+            state.redactions.push({id,page:p.pageNumber,x,y,w,h}); pushHistory({type:'addRedact', payload:{id,page:p.pageNumber,x,y,w,h}}); renderCanvasArea(); }
+        } else {
+          base.style.cursor = 'default';
+        }
+
+        area.appendChild(wrap);
+      });
+    }
+
+    // Make an element draggable within its parent
+    function makeDraggable(el, onStop){
+      el.style.position = 'absolute';
+      el.addEventListener('mousedown', md);
+      function md(e){
+        // allow editing text without moving when selection inside contentEditable
+        if(e.target !== el && e.target.isContentEditable) return;
+        e.preventDefault();
+        const startX = e.clientX; const startY = e.clientY;
+        const origLeft = parseFloat(el.style.left || 0); const origTop = parseFloat(el.style.top || 0);
+        function mm(ev){ const dx = ev.clientX - startX; const dy = ev.clientY - startY; el.style.left = (origLeft + dx) + 'px'; el.style.top = (origTop + dy) + 'px'; }
+        function mu(ev){ window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); onStop(parseFloat(el.style.left), parseFloat(el.style.top)); }
+        window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu);
+      }
+    }
+
+    // Add text box action
+    document.querySelector('.tool-btn[data-tool="text"]').addEventListener('click', ()=>{
+      const p = state.currentPage;
+      const tb = { id: uid(), page: p, x: 40, y: 40, width: 180, fontSize: parseInt($('fontSize').value||18), fontFamily: $('fontFamily').value, bold: $('fontBold').checked, italic: $('fontItalic').checked, color: $('fontColor').value, text: 'New text', z: (state.textBoxes.length?Math.max(...state.textBoxes.map(t=>t.z)):0)+1 };
+      state.textBoxes.push(tb); pushHistory({type:'addText', payload:tb}); renderCanvasArea();
+    });
+
+    // Layering actions
+    $('bringForwardBtn').addEventListener('click', ()=>{ if(!state.selectedBoxId) return; const tb = state.textBoxes.find(t=>t.id===state.selectedBoxId); if(!tb) return; tb.z = Math.max(...state.textBoxes.map(t=>t.z))+1; renderCanvasArea(); });
+    $('sendBackwardBtn').addEventListener('click', ()=>{ if(!state.selectedBoxId) return; const tb = state.textBoxes.find(t=>t.id===state.selectedBoxId); if(!tb) return; tb.z = Math.min(...state.textBoxes.map(t=>t.z))-1; renderCanvasArea(); });
+
+    function selectBox(id){ state.selectedBoxId = id;
+      document.querySelectorAll('.text-box').forEach(el=> el.style.border = (el.dataset.tid==id?'2px solid #2563eb':'1px dashed #999'));
+    }
+
+    // Undo/Redo (simple stack-based)
+    function pushHistory(action){ state.history.push(action); state.future = []; }
+    $('undoBtn').addEventListener('click', ()=>{ const act = state.history.pop(); if(!act) return; state.future.unshift(act); undoAction(act); renderCanvasArea(); });
+    $('redoBtn').addEventListener('click', ()=>{ const act = state.future.shift(); if(!act) return; state.history.push(act); redoAction(act); renderCanvasArea(); });
+
+    function undoAction(a){ if(!a) return; if(a.type==='addText') state.textBoxes = state.textBoxes.filter(t=>t.id!==a.payload.id); if(a.type==='addRedact') state.redactions = state.redactions.filter(r=>r.id!==a.payload.id); if(a.type==='delRedact') state.redactions.push(a.payload); if(a.type==='load'){ state.textBoxes=[]; state.redactions=[]; } }
+    function redoAction(a){ if(!a) return; if(a.type==='addText') state.textBoxes.push(a.payload); if(a.type==='addRedact') state.redactions.push(a.payload); if(a.type==='delRedact') state.redactions = state.redactions.filter(r=>r.id!==a.payload.id); }
+
+    // Export using pdf-lib: draw all text and redactions onto original PDF bytes and download
+    $('exportBtn').addEventListener('click', async ()=>{
+      if(!state.pdfBytes) return alert('Please load a PDF first.');
+      const { PDFDocument, rgb, StandardFonts } = PDFLib;
+      const pdfDoc = await PDFDocument.load(state.pdfBytes);
+      const helv = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      for(const tb of state.textBoxes){
+        const page = pdfDoc.getPage(tb.page-1);
+        const { height } = page.getSize();
+        const x = tb.x;
+        const y = height - tb.y - tb.fontSize;
+        page.drawText(tb.text || '', { x, y, size: tb.fontSize, font: helv, color: hexToRgbNorm(tb.color) });
+      }
+      for(const r of state.redactions){
+        const page = pdfDoc.getPage(r.page-1);
+        const { height } = page.getSize();
+        const x = r.x;
+        const y = height - r.y - r.h;
+        page.drawRectangle({ x, y, width: r.w, height: r.h, color: rgb(0,0,0) });
+      }
+      const out = await pdfDoc.save();
+      const blob = new Blob([out], {type:'application/pdf'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='edited.pdf'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    function hexToRgbNorm(hex){ const h = hex.replace('#',''); const bigint = parseInt(h,16); const r=(bigint>>16)&255; const g=(bigint>>8)&255; const b=bigint&255; return { r:r/255, g:g/255, b:b/255 }; }
+
+    // Save/Load workspace
+    $('saveWs').addEventListener('click', ()=>{ const ws = {textBoxes:state.textBoxes, redactions:state.redactions}; localStorage.setItem('pdf-editor-ws', JSON.stringify(ws)); alert('Workspace saved'); });
+    $('loadWs').addEventListener('click', ()=>{ const ws = JSON.parse(localStorage.getItem('pdf-editor-ws')||'null'); if(!ws) return alert('No saved workspace'); state.textBoxes = ws.textBoxes||[]; state.redactions = ws.redactions||[]; renderCanvasArea(); });
+
+    // Accessibility: keyboard handler for delete selected text box
+    window.addEventListener('keydown', (e)=>{ if(e.key === 'Delete' && state.selectedBoxId){ state.textBoxes = state.textBoxes.filter(t=>t.id!==state.selectedBoxId); state.selectedBoxId = null; renderCanvasArea(); } });
+
+    // Initial empty render
+    renderCanvasArea();
+  </script>
+</body>
+</html>
