@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart PDF Editor - Direct Text Editing</title>
+    <title>Smart PDF Editor - Precise Text & Smart Eraser</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,7 +12,6 @@
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9;
-            --eraser-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23ff0000' d='M16.24,3.56L21.19,8.5c1.05,1.05 1.05,2.76 0,3.81L11.95,21.55c-0.52,0.52 -1.21,0.81 -1.91,0.81 -0.69,0 -1.39,-0.29 -1.91,-0.81L2.21,15.63c-1.05,-1.05 -1.05,-2.76 0,-3.81l8.74,-8.74c0.52,-0.52 1.21,-0.81 1.91,-0.81 0.69,0 1.39,0.29 1.91,0.81l4.37,4.37z'/%3E%3C/svg%3E") 12 12, auto;
         }
         
         body {
@@ -100,14 +99,16 @@
         
         .editable-text {
             position: absolute;
-            border: 1px solid transparent;
-            padding: 2px;
-            cursor: text;
+            border: 2px dashed transparent;
+            padding: 4px;
+            cursor: move;
             min-width: 50px;
             min-height: 20px;
             word-break: break-word;
             pointer-events: auto;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
         }
         
         .editable-text:hover {
@@ -118,6 +119,11 @@
             outline: 2px solid #007bff;
             border-color: #007bff !important;
             background: white;
+        }
+        
+        .editable-text.dragging {
+            opacity: 0.8;
+            cursor: grabbing;
         }
         
         .mobile-toolbar {
@@ -166,13 +172,28 @@
         
         .eraser-preview {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            border: 2px solid #ff0000;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #ff0000;
             border-radius: 50%;
             pointer-events: none;
             display: none;
             z-index: 1000;
+            background: rgba(255, 0, 0, 0.1);
+        }
+        
+        .pdf-text-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .erased-area {
+            position: absolute;
+            background: white;
+            border: none;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -226,7 +247,7 @@
                         <button class="btn btn-outline-primary tool-btn" id="drawTool" title="Draw">
                             <i class="fas fa-pen"></i>
                         </button>
-                        <button class="btn btn-outline-primary tool-btn" id="eraserTool" title="Eraser">
+                        <button class="btn btn-outline-primary tool-btn" id="eraserTool" title="Smart Eraser">
                             <i class="fas fa-eraser"></i>
                         </button>
                     </div>
@@ -276,6 +297,7 @@
                     <div class="canvas-container">
                         <canvas id="pdfCanvas"></canvas>
                         <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
+                        <div id="pdfTextOverlay" class="pdf-text-overlay"></div>
                         <div id="editOverlay" class="edit-overlay"></div>
                         <div id="eraserPreview" class="eraser-preview"></div>
                     </div>
@@ -324,10 +346,17 @@
         let drawings = [];
         let currentDrawing = [];
         let textElements = [];
+        let erasedAreas = []; // For smart eraser
         let scaleFactor = 1.5;
         let undoStack = [];
         let redoStack = [];
         let nextId = 1;
+        
+        // Drag variables
+        let isDragging = false;
+        let dragElement = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
         
         // DOM Elements
         const fileInput = document.getElementById('fileInput');
@@ -338,6 +367,7 @@
         const pdfCanvas = document.getElementById('pdfCanvas');
         const drawingCanvas = document.getElementById('drawingCanvas');
         const editOverlay = document.getElementById('editOverlay');
+        const pdfTextOverlay = document.getElementById('pdfTextOverlay');
         const eraserPreview = document.getElementById('eraserPreview');
         const ctx = pdfCanvas.getContext('2d');
         const drawCtx = drawingCanvas.getContext('2d');
@@ -439,6 +469,7 @@
             undoStack.push({
                 textElements: JSON.parse(JSON.stringify(textElements)),
                 drawings: JSON.parse(JSON.stringify(drawings)),
+                erasedAreas: JSON.parse(JSON.stringify(erasedAreas)),
                 currentPage: currentPage
             });
             redoStack = [];
@@ -449,12 +480,14 @@
                 redoStack.push({
                     textElements: JSON.parse(JSON.stringify(textElements)),
                     drawings: JSON.parse(JSON.stringify(drawings)),
+                    erasedAreas: JSON.parse(JSON.stringify(erasedAreas)),
                     currentPage: currentPage
                 });
                 
                 const prevState = undoStack.pop();
                 textElements = JSON.parse(JSON.stringify(prevState.textElements));
                 drawings = JSON.parse(JSON.stringify(prevState.drawings));
+                erasedAreas = JSON.parse(JSON.stringify(prevState.erasedAreas));
                 currentPage = prevState.currentPage;
                 renderPage(currentPage);
             }
@@ -465,12 +498,14 @@
                 undoStack.push({
                     textElements: JSON.parse(JSON.stringify(textElements)),
                     drawings: JSON.parse(JSON.stringify(drawings)),
+                    erasedAreas: JSON.parse(JSON.stringify(erasedAreas)),
                     currentPage: currentPage
                 });
                 
                 const nextState = redoStack.pop();
                 textElements = JSON.parse(JSON.stringify(nextState.textElements));
                 drawings = JSON.parse(JSON.stringify(nextState.drawings));
+                erasedAreas = JSON.parse(JSON.stringify(nextState.erasedAreas));
                 currentPage = nextState.currentPage;
                 renderPage(currentPage);
             }
@@ -537,6 +572,8 @@
                 pdfCanvas.width = viewport.width;
                 drawingCanvas.height = viewport.height;
                 drawingCanvas.width = viewport.width;
+                pdfTextOverlay.style.width = viewport.width + 'px';
+                pdfTextOverlay.style.height = viewport.height + 'px';
                 editOverlay.style.width = viewport.width + 'px';
                 editOverlay.style.height = viewport.height + 'px';
                 
@@ -549,6 +586,7 @@
                 pageInfo.textContent = `Page ${num} of ${totalPages}`;
                 redrawCanvas();
                 renderTextElements();
+                renderErasedAreas();
             } catch (error) {
                 console.error('Error rendering page:', error);
                 alert('Error rendering PDF page.');
@@ -611,9 +649,33 @@
             } else if (currentTool === 'draw') {
                 startDrawing(e);
             } else if (currentTool === 'eraser') {
-                eraseElementAt(x, y);
+                startErasing(x, y);
+            } else if (currentTool === 'select') {
+                // Check if clicking on a text element for dragging
+                const elements = document.elementsFromPoint(e.clientX, e.clientY);
+                let clickedText = null;
+                
+                for (let el of elements) {
+                    if (el.classList.contains('editable-text') && el.parentElement === editOverlay) {
+                        clickedText = el;
+                        break;
+                    }
+                }
+                
+                if (clickedText) {
+                    // Start dragging
+                    isDragging = true;
+                    dragElement = clickedText;
+                    dragElement.classList.add('dragging');
+                    
+                    const elRect = dragElement.getBoundingClientRect();
+                    dragOffsetX = e.clientX - elRect.left;
+                    dragOffsetY = e.clientY - elRect.top;
+                    
+                    // Bring to front
+                    dragElement.style.zIndex = '1000';
+                }
             }
-            // For select tool, let the text element handle its own events
         }
         
         function handleCanvasMouseMove(e) {
@@ -626,9 +688,32 @@
             
             if (currentTool === 'eraser') {
                 // Move eraser preview
-                eraserPreview.style.left = (e.clientX - 15) + 'px';
-                eraserPreview.style.top = (e.clientY - 15) + 'px';
+                eraserPreview.style.left = (e.clientX - 20) + 'px';
+                eraserPreview.style.top = (e.clientY - 20) + 'px';
                 eraserPreview.style.display = 'block';
+                
+                // Continue erasing if mouse is down
+                if (e.buttons === 1) { // Left mouse button pressed
+                    continueErasing(x, y);
+                }
+            }
+            
+            if (isDragging && dragElement) {
+                // Move the dragged element
+                const overlayRect = editOverlay.getBoundingClientRect();
+                const newX = e.clientX - overlayRect.left - dragOffsetX;
+                const newY = e.clientY - overlayRect.top - dragOffsetY;
+                
+                dragElement.style.left = newX + 'px';
+                dragElement.style.top = newY + 'px';
+                
+                // Update the text element data
+                const id = parseInt(dragElement.dataset.id);
+                const element = textElements.find(el => el.id === id && el.page === currentPage);
+                if (element) {
+                    element.x = newX;
+                    element.y = newY;
+                }
             }
             
             if (drawingMode && isDrawing) {
@@ -637,8 +722,20 @@
         }
         
         function handleCanvasMouseUp(e) {
+            if (isDragging && dragElement) {
+                // Finish dragging
+                dragElement.classList.remove('dragging');
+                dragElement.style.zIndex = 'auto';
+                isDragging = false;
+                dragElement = null;
+            }
+            
             if (isDrawing) {
                 stopDrawing();
+            }
+            
+            if (currentTool === 'eraser') {
+                stopErasing();
             }
         }
         
@@ -738,7 +835,7 @@
         function addNewTextElement(x, y) {
             const textElement = {
                 id: nextId++,
-                text: 'Type here...',
+                text: 'Click to edit text',
                 x: x,
                 y: y,
                 fontSize: 16,
@@ -818,56 +915,55 @@
             });
         }
         
-        function eraseElementAt(x, y) {
-            // Check for text elements
-            const textElementsToRemove = [];
-            textElements.forEach((element, index) => {
-                if (element.page !== currentPage) return;
+        // Smart Eraser Functions
+        function startErasing(x, y) {
+            continueErasing(x, y);
+        }
+        
+        function continueErasing(x, y) {
+            // Create eraser effect - this is a simplified version
+            // In a real implementation, you would:
+            // 1. Detect text under cursor
+            // 2. Create white rectangle to "erase" it
+            // 3. Preserve background
+            
+            const eraserSize = 30; // 30px eraser
+            
+            // Add erased area
+            const erasedArea = {
+                id: nextId++,
+                x: x - eraserSize/2,
+                y: y - eraserSize/2,
+                width: eraserSize,
+                height: eraserSize,
+                page: currentPage
+            };
+            
+            erasedAreas.push(erasedArea);
+            renderErasedAreas();
+        }
+        
+        function stopErasing() {
+            // Erasing stopped
+        }
+        
+        function renderErasedAreas() {
+            // Clear existing erased areas
+            pdfTextOverlay.innerHTML = '';
+            
+            erasedAreas.forEach(area => {
+                if (area.page !== currentPage) return;
                 
-                // Simple distance check
-                const distance = Math.sqrt(
-                    Math.pow(element.x - x, 2) + Math.pow(element.y - y, 2)
-                );
+                const erasedDiv = document.createElement('div');
+                erasedDiv.className = 'erased-area';
+                erasedDiv.style.left = area.x + 'px';
+                erasedDiv.style.top = area.y + 'px';
+                erasedDiv.style.width = area.width + 'px';
+                erasedDiv.style.height = area.height + 'px';
+                erasedDiv.style.backgroundColor = 'white';
                 
-                if (distance < 50) { // 50px radius
-                    textElementsToRemove.push(index);
-                }
+                pdfTextOverlay.appendChild(erasedDiv);
             });
-            
-            // Remove text elements (in reverse order to maintain indices)
-            for (let i = textElementsToRemove.length - 1; i >= 0; i--) {
-                textElements.splice(textElementsToRemove[i], 1);
-            }
-            
-            // Check for drawings
-            const drawingsToRemove = [];
-            drawings.forEach((drawing, index) => {
-                if (drawing.page !== currentPage) return;
-                
-                // Check if any point is near the click
-                let nearPoint = false;
-                drawing.points.forEach(point => {
-                    const distance = Math.sqrt(
-                        Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2)
-                    );
-                    if (distance < 30) {
-                        nearPoint = true;
-                    }
-                });
-                
-                if (nearPoint) {
-                    drawingsToRemove.push(index);
-                }
-            });
-            
-            // Remove drawings (in reverse order)
-            for (let i = drawingsToRemove.length - 1; i >= 0; i--) {
-                drawings.splice(drawingsToRemove[i], 1);
-            }
-            
-            // Re-render
-            redrawCanvas();
-            renderTextElements();
         }
         
         async function downloadEditedPDF() {
@@ -881,11 +977,27 @@
                 // Load the PDF with pdf-lib
                 const pdfDocLib = await PDFLib.PDFDocument.load(originalPdfBytes);
                 const font = await pdfDocLib.embedFont(PDFLib.StandardFonts.Helvetica);
+                const whiteRect = PDFLib.rgb(1, 1, 1); // White color
                 
                 // Process each page
                 for (let pageNum = 1; pageNum <= pdfDocLib.getPageCount(); pageNum++) {
                     const page = pdfDocLib.getPage(pageNum - 1);
                     const { width, height } = page.getSize();
+                    
+                    // Add erased areas (white rectangles)
+                    erasedAreas.forEach(area => {
+                        if (area.page === pageNum) {
+                            page.drawRectangle({
+                                x: area.x,
+                                y: height - area.y - area.height,
+                                width: area.width,
+                                height: area.height,
+                                color: whiteRect,
+                                borderColor: whiteRect,
+                                borderWidth: 0
+                            });
+                        }
+                    });
                     
                     // Add text elements
                     textElements.forEach(element => {
