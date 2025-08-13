@@ -3,243 +3,195 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SIP | EMI | GST — Advanced Pro Calculators</title>
+<title>Finance & Billing Tools</title>
 <style>
+/* -- Theme colors -- */
 :root{
   --bg:#0e1326; --card:#151c3a; --text:#e9edf6; --muted:#a7b0c6; --accent:#4fb4ff;
-  --ok:#16a34a; --warn:#f59e0b; --bad:#ef4444; --input:#0f1430; --border:#273056;
+  --input:#0f1430; --border:#273056;
 }
 [data-theme="light"]{
   --bg:#f6f8fc; --card:#ffffff; --text:#161a2b; --muted:#556080; --accent:#0b74ff;
-  --ok:#0a8f55; --warn:#b66b00; --bad:#c32133; --input:#f0f3fa; --border:#d7deee;
+  --input:#f0f3fa; --border:#d7deee;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
-header{position:sticky;top:0;background:linear-gradient(90deg,#101742,#0b2442);padding:14px;border-bottom:1px solid var(--border)}
+header{background:linear-gradient(90deg,#101742,#0b2442);padding:14px;border-bottom:1px solid var(--border)}
 [data-theme="light"] header{background:linear-gradient(90deg,#eaf2ff,#e6f5ff)}
-.wrap{max-width:1100px;margin:auto;padding:0 14px}
-.nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.nav a{color:var(--text);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card)}
-main{max-width:1100px;margin:16px auto;padding:0 14px}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-.col-6{grid-column:span 6}.col-12{grid-column:span 12}
-@media(max-width:900px){.col-6{grid-column:span 12}}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
-h2{margin:0 0 8px 0;font-size:18px}
-p.sm{margin:6px 0 14px 0;color:var(--muted)}
-label{display:block;margin:8px 0 4px 0;font-size:14px}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-.row>*{flex:1}
-input,select,button{
-  width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);
-  background:var(--input);color:var(--text);font-size:14px
-}
-input:focus,select:focus{border-color:var(--accent);outline:none}
-.btn{background:var(--accent);color:#05223a;border:none;font-weight:600;cursor:pointer}
+header h1{margin:0;font-size:18px}
+.btn{background:var(--accent);color:#05223a;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
 .btn.sec{background:transparent;color:var(--text);border:1px solid var(--border)}
-.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.box{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:8px}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid var(--border);padding:6px;text-align:right}
-th{text-align:left;background:color-mix(in oklab,var(--accent) 10%,transparent)}
-.result{margin-top:10px;padding:8px;border-radius:8px;background:color-mix(in oklab,var(--accent) 15%,transparent)}
+main{max-width:1100px;margin:16px auto;padding:0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;transition:transform .2s}
+.card:hover{transform:scale(1.03)}
+.card h2{margin:10px 0 0;font-size:18px}
+.back-btn{margin-bottom:12px}
+label{display:block;margin-top:6px}
+input,select{width:100%;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--input);color:var(--text)}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{border:1px solid var(--border);padding:6px;text-align:center}
 </style>
 </head>
 <body data-theme="dark">
 <header>
-  <div class="wrap">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h1 style="font-size:18px">SIP | EMI | GST — Advanced Pro Calculators</h1>
-      <button class="btn sec" id="themeBtn" style="width:auto">Theme</button>
-    </div>
-    <div class="nav">
-      <a href="#sip">SIP</a><a href="#emi">EMI</a><a href="#gst">GST</a>
-    </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h1>Finance & Billing Tools</h1>
+    <button class="btn.sec" id="themeBtn">Theme</button>
   </div>
 </header>
 
-<main>
-<div class="grid">
+<main id="app"></main>
 
-<!-- SIP -->
-<section class="card col-6" id="sip">
-<h2>SIP Calculator</h2>
-<p class="sm">M = P × {[(1+i)^n – 1] / i} × (1+i)</p>
-<div class="row">
-  <div><label>Monthly SIP (₹)</label><input type="number" id="sipP" value="5000"></div>
-  <div><label>Annual Return (%)</label><input type="number" id="sipR" value="12" step="0.1"></div>
-</div>
-<div class="row">
-  <div><label>Years</label><input type="number" id="sipY" value="10"></div>
-  <div><label>Months</label><input type="number" id="sipM" value="0"></div>
-</div>
-<div class="row">
-  <div><label>Step‑up % / year</label><input type="number" id="sipStep" value="0"></div>
-  <div><label>Lump-sum (₹)</label><input type="number" id="sipLump" value="0"></div>
-</div>
-<div class="row">
-  <div><label>Inflation %</label><input type="number" id="sipInfl" value="0"></div>
-  <div><label>Compounding</label>
-    <select id="sipComp">
-      <option value="monthly" selected>Monthly</option>
-      <option value="quarterly">Quarterly</option>
-      <option value="yearly">Yearly</option>
-    </select>
-  </div>
-</div>
-<div class="row">
-  <button class="btn" id="sipCalc">Calculate</button>
-  <button class="btn sec" id="sipCSV">Export CSV</button>
-</div>
-<div class="kpi">
-  <div class="box"><div>Maturity</div><div id="sipMat">—</div></div>
-  <div class="box"><div>Invested</div><div id="sipInv">—</div></div>
-  <div class="box"><div>Gains</div><div id="sipGain">—</div></div>
-</div>
-<div class="result">Real Value (infl adj): <span id="sipReal">—</span></div>
-<h4>Target → Required SIP</h4>
-<div class="row">
-  <div><label>Target ₹</label><input type="number" id="sipGoal" value="2000000"></div>
-  <div><label>Years</label><input type="number" id="sipGoalY" value="10"></div>
-</div>
-<div class="row"><button class="btn" id="sipReqBtn">Calculate Required</button>
-<span id="sipReq" style="margin:auto 0 auto auto;">—</span></div>
-<table id="sipTable" style="display:none"><thead><tr><th>Year</th><th>Invested</th><th>Value</th><th>Gain</th></tr></thead><tbody></tbody></table>
-</section>
-
-<!-- EMI -->
-<section class="card col-6" id="emi">
-<h2>EMI Calculator</h2>
-<p class="sm">EMI = P × r × (1+r)^n / [(1+r)^n – 1]</p>
-<div class="row">
-  <div><label>Loan ₹</label><input type="number" id="emiP" value="1000000"></div>
-  <div><label>Annual Rate %</label><input type="number" id="emiR" value="9"></div>
-</div>
-<div class="row">
-  <div><label>Months</label><input type="number" id="emiN" value="240"></div>
-  <div><label>Part-prepay ₹</label><input type="number" id="emiPre" value="0"></div>
-</div>
-<div class="row">
-  <div><label>Rec. prepay /yr ₹</label><input type="number" id="emiRec" value="0"></div>
-  <div><label>Rate ↑%/yr</label><input type="number" id="emiRateInc" value="0"></div>
-</div>
-<div class="row">
-  <button class="btn" id="emiCalc">Calculate</button>
-  <button class="btn sec" id="emiCSV">Export CSV</button>
-</div>
-<div class="kpi">
-  <div class="box"><div>EMI</div><div id="emiOut">—</div></div>
-  <div class="box"><div>Total Interest</div><div id="emiInt">—</div></div>
-  <div class="box"><div>Total Payment</div><div id="emiTot">—</div></div>
-</div>
-<table id="emiTable" style="display:none"><thead><tr><th>Month</th><th>EMI</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody></tbody></table>
-</section>
-
-<!-- GST -->
-<section class="card col-12" id="gst">
-<h2>GST Calculator</h2>
-<div class="row">
-  <div><label>Amount ₹</label><input type="number" id="gstAmt" value="1180"></div>
-  <div><label>GST %</label><input type="number" id="gstRate" value="18"></div>
-  <div><label>Mode</label><select id="gstMode"><option value="add">Exclusive→Add</option><option value="remove" selected>Inclusive→Remove</option></select></div>
-  <div><label>Split</label><select id="gstSplit"><option value="cgst">CGST+SGST</option><option value="igst">IGST</option></select></div>
-</div>
-<div class="row">
-  <button class="btn" id="gstCalc">Calculate</button>
-  <button class="btn sec" id="gstReset">Reset</button>
-  <button class="btn sec" id="gstCopy">Copy</button>
-</div>
-<div class="kpi">
-  <div class="box"><div>Base</div><div id="gstBase">—</div></div>
-  <div class="box"><div>GST</div><div id="gstTax">—</div></div>
-  <div class="box"><div>Total</div><div id="gstTotal">—</div></div>
-</div>
-<div class="result" id="gstBreak">CGST: — | SGST: —</div>
-</section>
-
-</div>
-</main>
+<!-- Libs -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-// Theme toggle
-document.getElementById('themeBtn').onclick=()=>{
-  document.body.dataset.theme = document.body.dataset.theme==='dark'?'light':'dark';
-};
-const fmt=n=>isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'—';
-const csvDownload=(name,rows)=>{
-  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name;a.click();
+/* ----- Pages Content ----- */
+const pages={
+home:`<div class="grid">
+ <div class="card" onclick="navigate('sip')"><h2>SIP Calculator</h2></div>
+ <div class="card" onclick="navigate('emi')"><h2>EMI Calculator</h2></div>
+ <div class="card" onclick="navigate('gstcalc')"><h2>GST Calculator</h2></div>
+ <div class="card" onclick="navigate('bill')"><h2>GST Bill Generator</h2></div>
+</div>`,
+
+sip:`<button class="btn.sec back-btn" onclick="navigate('home')">← Back</button>
+<h2>SIP Calculator</h2>
+<label>Monthly SIP</label><input id="sipP" value="5000">
+<label>Annual Return %</label><input id="sipR" value="12">
+<label>Years</label><input id="sipY" value="10">
+<button class="btn" onclick="calcSIP()">Calculate</button>
+<button class="btn.sec" onclick="exportSIP('xlsx')">Excel</button>
+<button class="btn.sec" onclick="exportSIP('pdf')">PDF</button>
+<div id="sipResult"></div>
+<table id="sipTable" style="display:none"><thead><tr><th>Year</th><th>Invested</th><th>Value</th><th>Gain</th></tr></thead><tbody></tbody></table>`,
+
+emi:`<button class="btn.sec back-btn" onclick="navigate('home')">← Back</button>
+<h2>EMI Calculator</h2>
+<label>Loan Amount</label><input id="emiP" value="1000000">
+<label>Annual Rate %</label><input id="emiR" value="9">
+<label>Months</label><input id="emiN" value="240">
+<button class="btn" onclick="calcEMI()">Calculate</button>
+<button class="btn.sec" onclick="exportEMI('xlsx')">Excel</button>
+<button class="btn.sec" onclick="exportEMI('pdf')">PDF</button>
+<div id="emiResult"></div>
+<table id="emiTable" style="display:none"><thead><tr><th>Month</th><th>EMI</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody></tbody></table>`,
+
+gstcalc:`<button class="btn.sec back-btn" onclick="navigate('home')">← Back</button>
+<h2>GST Calculator</h2>
+<label>Amount</label><input id="gstAmt" value="1180">
+<label>GST Rate %</label><input id="gstRate" value="18">
+<label>Mode</label><select id="gstMode"><option value="add">Add GST</option><option value="remove" selected>Remove GST</option></select>
+<button class="btn" onclick="calcGST()">Calculate</button>
+<button class="btn.sec" onclick="exportGST('xlsx')">Excel</button>
+<button class="btn.sec" onclick="exportGST('pdf')">PDF</button>
+<div id="gstResult"></div>`,
+
+bill:`<button class="btn.sec back-btn" onclick="navigate('home')">← Back</button>
+<h2>GST Bill Generator</h2>
+<label>Company Name</label><input id="compName"><label>Address</label><input id="compAddr"><label>GSTIN</label><input id="compGST">
+<label>Logo</label><input type="file" id="compLogo" accept="image/*">
+<label>Client Name</label><input id="clientName"><label>Client Address</label><input id="clientAddr"><label>Client GSTIN</label><input id="clientGST">
+<h3>Items</h3><table id="billItems"><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>GST%</th><th>Action</th></tr></thead><tbody></tbody></table>
+<button onclick="addBillItem()">+ Item</button>
+<label>Template</label><select id="billTemplate">
+<option value="classic">Classic</option><option value="modern">Modern</option>
+<option value="minimal">Minimal</option><option value="bold">Bold</option><option value="elegant">Elegant</option>
+</select>
+<button class="btn" onclick="exportBill('xlsx')">Excel</button>
+<button class="btn" onclick="exportBill('pdf')">PDF</button>
+<div id="billPreview"></div>`
 };
 
-// SIP
-function sipMonthlyRate(r,comp){
-  const R=r/100;
-  if(comp==='monthly') return R/12;
-  if(comp==='quarterly') return Math.pow(1+R,1/4)-1;
-  if(comp==='yearly') return Math.pow(1+R,1/12)-1;
-  return R/12;
-}
-function runSIP(){
-  let P=+sipP.value||0, rate=+sipR.value||0, months=(+sipY.value*12)+(+sipM.value||0),
-      step=+sipStep.value||0, lump=+sipLump.value||0, infl=+sipInfl.value||0, comp=sipComp.value;
-  let i=sipMonthlyRate(rate,comp);
-  let invested=0,value=lump*Math.pow(1+i,months), yearlyRows=[];
-  let curP=P;
-  for(let m=1;m<=months;m++){
-    value=value*(1+i)+curP;
-    invested+=curP;
-    if(m%12===0){ let g=value-invested-lump*Math.pow(1+i,m); yearlyRows.push([m/12, invested+lump, value, value-(invested+lump)]); curP*=(1+step/100);}
-  }
-  const gain=value-(invested+lump), real=value/Math.pow(1+infl/100,months/12);
-  sipMat.textContent='₹ '+fmt(value); sipInv.textContent='₹ '+fmt(invested+lump); sipGain.textContent='₹ '+fmt(gain); sipReal.textContent='₹ '+fmt(real);
-  sipTBody.innerHTML=yearlyRows.map(r=>`<tr><td>${r[0]}</td><td>₹ ${fmt(r[1])}</td><td>₹ ${fmt(r[2])}</td><td>₹ ${fmt(r[3])}</td></tr>`).join('');
-  sipTable.style.display='table';
-}
-function sipReqCalc(){
-  let target=+sipGoal.value||0, years=+sipGoalY.value||0, r=+sipR.value||0, comp=sipComp.value;
-  let i=sipMonthlyRate(r,comp), n=years*12; const A=((Math.pow(1+i,n)-1)/i)*(1+i); sipReq.textContent='₹ '+fmt(target/A);
-}
-sipCalc.onclick=runSIP; sipCSV.onclick=()=>{
-  csvDownload('sip.csv',[['Year','Invested','Value','Gain'],...Array.from(sipTBody.querySelectorAll('tr')).map(tr=>
-    Array.from(tr.children).map(td=>td.innerText))]);
-};
-sipReqBtn.onclick=sipReqCalc;
+/* ----- Routing ----- */
+function navigate(p){location.hash=p;}
+function render(){let h=location.hash.replace('#','')||'home';document.getElementById('app').innerHTML=pages[h]||pages.home;if(h==='bill'){billItems=[];addBillItem();loadCompanyDetails();}}
+window.addEventListener('hashchange',render);
 
-// EMI
-function runEMI(){
-  let P=+emiP.value||0, rate=+emiR.value||0, n=+emiN.value||0, pre=+emiPre.value||0, rec=+emiRec.value||0, rinc=+emiRateInc.value||0;
-  let r=(rate/100)/12, bal=P-pre, emi=bal>0?(bal*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1):0; let rows=[];
-  let totInt=0; for(let m=1;m<=n && bal>0;m++){
-    let int=bal*r, princ=emi-int; bal=Math.max(0,bal-princ); totInt+=int;
-    rows.push([m,emi,int,princ,bal]); if(m%12===0 && rec){ bal=Math.max(0,bal-rec);}
-    if(m%12===0 && rinc){ rate+=rinc; r=(rate/100)/12; emi=(bal*r*Math.pow(1+r,(n-m)))/(Math.pow(1+r,(n-m))-1);}
-  }
-  emiOut.textContent='₹ '+fmt(emi); emiInt.textContent='₹ '+fmt(totInt); emiTot.textContent='₹ '+fmt(totInt+P-pre);
-  emiTBody.innerHTML=rows.slice(0,12).map(r=>`<tr><td>${r[0]}</td><td>₹ ${fmt(r[1])}</td><td>₹ ${fmt(r[2])}</td><td>₹ ${fmt(r[3])}</td><td>₹ ${fmt(r[4])}</td></tr>`).join('');
-  emiTable.style.display='table';
-}
-emiCalc.onclick=runEMI; emiCSV.onclick=()=>{
-  csvDownload('emi.csv',[['Month','EMI','Interest','Principal','Balance'],...Array.from(emiTBody.querySelectorAll('tr')).map(tr=>Array.from(tr.children).map(td=>td.innerText))]);
-};
+/* ----- Theme toggle ----- */
+themeBtn.onclick=()=>{document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';};
 
-// GST
-function runGST(){
-  let amt=+gstAmt.value||0, rate=+gstRate.value||0, mode=gstMode.value, split=gstSplit.value;
-  let r=rate/100, base,tax,total;
-  if(mode==='add'){ base=amt; tax=base*r; total=base+tax;}
-  else { base=amt/(1+r); tax=amt-base; total=amt;}
-  gstBase.textContent='₹ '+fmt(base); gstTax.textContent='₹ '+fmt(tax); gstTotal.textContent='₹ '+fmt(total);
-  gstBreak.textContent= split==='cgst'?`CGST: ₹ ${fmt(tax/2)} | SGST: ₹ ${fmt(tax/2)}`:`IGST: ₹ ${fmt(tax)}`;
-}
-gstCalc.onclick=runGST;
-gstReset.onclick=()=>{gstAmt.value=1180;gstRate.value=18;gstMode.value='remove';gstSplit.value='cgst';runGST();};
-gstCopy.onclick=()=>{
-  navigator.clipboard.writeText(`${gstBase.innerText}\n${gstTax.innerText}\n${gstTotal.innerText}\n${gstBreak.innerText}`);
-};
+/* ----- Common helpers for export ----- */
+function getDateString(){let d=new Date();return d.toISOString().slice(0,16).replace('T','_');}
+function autoFitColumns(ws,data){ws['!cols']=data[0].map((_,i)=>({wch:Math.max(...data.map(r=>(r[i]||'').toString().length))+2}));}
 
-// Init
-sipTBody=document.querySelector('#sipTable tbody'); sipTable=document.getElementById('sipTable'); emiTBody=document.querySelector('#emiTable tbody'); emiTable=document.getElementById('emiTable');
-runSIP(); sipReqCalc(); runEMI(); runGST();
+/* ----- SIP ----- */
+function calcSIP(){let P=+sipP.value,r=+sipR.value/100/12,y=+sipY.value,n=y*12,m=P*((Math.pow(1+r,n)-1)/r)*(1+r),inv=P*n,g=m-inv;
+ sipResult.innerHTML=`Invested: ₹${inv.toFixed(2)}<br>Maturity: ₹${m.toFixed(2)}<br>Gain: ₹${g.toFixed(2)}`;
+ let tb='';for(let yr=1;yr<=y;yr++){let mo=yr*12,val=P*((Math.pow(1+r,mo)-1)/r)*(1+r);tb+=`<tr><td>${yr}</td><td>${(P*mo).toFixed(2)}</td><td>${val.toFixed(2)}</td><td>${(val-P*mo).toFixed(2)}</td></tr>`;}sipTable.querySelector('tbody').innerHTML=tb;sipTable.style.display='table';
+}
+function exportSIP(t){let title=`SIP_${getDateString()}`,data=[["Year","Invested","Value","Gain"]];
+ document.querySelectorAll('#sipTable tbody tr').forEach(tr=>{let row=[];tr.querySelectorAll('td').forEach(td=>row.push(td.innerText));data.push(row);});
+ if(t==='xlsx'){let wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);autoFitColumns(ws,data);XLSX.utils.book_append_sheet(wb,ws,"SIP");XLSX.writeFile(wb,title+".xlsx");}
+ else{let{jsPDF}=window.jspdf;let doc=new jsPDF();doc.text("SIP Report",14,12);doc.autoTable({head:[data[0]],body:data.slice(1)});doc.save(title+".pdf");}}
+
+/* ----- EMI ----- */
+function calcEMI(){let P=+emiP.value,rate=+emiR.value/100/12,n=+emiN.value,emi=P*rate*Math.pow(1+rate,n)/(Math.pow(1+rate,n)-1),bal=P,totalInt=0,tb='';
+ for(let m=1;m<=n;m++){let int=bal*rate,prin=emi-int;bal-=prin;totalInt+=int;tb+=`<tr><td>${m}</td><td>${emi.toFixed(2)}</td><td>${int.toFixed(2)}</td><td>${prin.toFixed(2)}</td><td>${bal.toFixed(2)}</td></tr>`;}
+ emiResult.innerHTML=`EMI: ₹${emi.toFixed(2)}<br>Total Interest: ₹${totalInt.toFixed(2)}<br>Total Payment: ₹${(P+totalInt).toFixed(2)}`;
+ emiTable.querySelector('tbody').innerHTML=tb;emiTable.style.display='table';
+}
+function exportEMI(t){let title=`EMI_${getDateString()}`,data=[["Month","EMI","Interest","Principal","Balance"]];
+ document.querySelectorAll('#emiTable tbody tr').forEach(tr=>{let row=[];tr.querySelectorAll('td').forEach(td=>row.push(td.innerText));data.push(row);});
+ if(t==='xlsx'){let wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);autoFitColumns(ws,data);XLSX.utils.book_append_sheet(wb,ws,"EMI");XLSX.writeFile(wb,title+".xlsx");}
+ else{let{jsPDF}=window.jspdf;let doc=new jsPDF();doc.text("EMI Schedule",14,12);doc.autoTable({head:[data[0]],body:data.slice(1)});doc.save(title+".pdf");}}
+
+/* ----- GST ----- */
+function calcGST(){let amt=+gstAmt.value,r=+gstRate.value/100,mode=gstMode.value,base,gst,total;
+ if(mode==='add'){base=amt;gst=base*r;total=base+gst;}else{base=amt/(1+r);gst=amt-base;total=amt;}
+ gstResult.innerHTML=`Base: ₹${base.toFixed(2)}\nGST: ₹${gst.toFixed(2)}\nTotal: ₹${total.toFixed(2)}\nCGST: ₹${(gst/2).toFixed(2)} | SGST: ₹${(gst/2).toFixed(2)}`;
+}
+function exportGST(t){let title=`GST_${getDateString()}`,lines=gstResult.innerText.trim().split('\n').map(l=>[l]);
+ if(t==='xlsx'){let wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(lines);autoFitColumns(ws,lines);XLSX.utils.book_append_sheet(wb,ws,"GST");XLSX.writeFile(wb,title+".xlsx");}
+ else{let{jsPDF}=window.jspdf;let doc=new jsPDF();doc.text("GST Calculation",14,12);doc.autoTable({body:lines});doc.save(title+".pdf");}}
+
+/* ----- BILL GENERATOR ----- */
+let billItems=[];
+function addBillItem(n="",q=1,r=0,g=18){billItems.push({name:n,qty:q,rate:r,gst:g});renderBillItems();}
+function removeBillItem(i){billItems.splice(i,1);renderBillItems();}
+function renderBillItems(){let tb=document.querySelector('#billItems tbody');tb.innerHTML='';
+ billItems.forEach((it,idx)=>{tb.innerHTML+=`<tr>
+<td><input value="${it.name}" onchange="billItems[${idx}].name=this.value"></td>
+<td><input type="number" value="${it.qty}" onchange="billItems[${idx}].qty=+this.value"></td>
+<td><input type="number" value="${it.rate}" onchange="billItems[${idx}].rate=+this.value"></td>
+<td><input type="number" value="${it.gst}" onchange="billItems[${idx}].gst=+this.value"></td>
+<td><button onclick="removeBillItem(${idx})">❌</button></td></tr>`;});updateBillPreview();}
+function updateBillPreview(){let comp={name:compName.value,addr:compAddr.value,gst:compGST.value},client={name:clientName.value,addr:clientAddr.value,gst:clientGST.value};
+ let html=`<h3>${comp.name}</h3><div>${comp.addr}</div><div>GSTIN: ${comp.gst}</div><hr><b>Bill To:</b><div>${client.name}</div><div>${client.addr}</div><div>GSTIN: ${client.gst}</div>`;
+ html+=`<table border="1" style="border-collapse:collapse;width:100%"><tr><th>Item</th><th>Qty</th><th>Rate</th><th>GST%</th><th>Total</th></tr>`;
+ let sub=0,cgst=0,sgst=0;billItems.forEach(it=>{let val=it.qty*it.rate,tax=val*it.gst/100;sub+=val;cgst+=tax/2;sgst+=tax/2;html+=`<tr><td>${it.name}</td><td>${it.qty}</td><td>${it.rate}</td><td>${it.gst}</td><td>${(val+tax).toFixed(2)}</td></tr>`;});
+ html+=`</table>Subtotal: ₹${sub.toFixed(2)}<br>CGST: ₹${cgst.toFixed(2)} | SGST: ₹${sgst.toFixed(2)}<br><b>Grand Total: ₹${(sub+cgst+sgst).toFixed(2)}</b>`;
+ billPreview.innerHTML=html;
+}
+function exportBill(t){updateBillPreview();let title=`Invoice_${getDateString()}`,compNameV=compName.value||'Invoice';
+ if(t==='xlsx'){let data=[["Item","Qty","Rate","GST %","Total"]];billItems.forEach(it=>{let val=it.qty*it.rate,tax=val*it.gst/100;data.push([it.name,it.qty,it.rate,it.gst,(val+tax).toFixed(2)]);});
+ data.push(["","","","Grand Total",(billItems.reduce((a,i)=>a+i.qty*i.rate*(1+i.gst/100),0)).toFixed(2)]);let wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);autoFitColumns(ws,data);
+ XLSX.utils.book_append_sheet(wb,ws,"Invoice");XLSX.writeFile(wb,compNameV+".xlsx");
+ } else {let{jsPDF}=window.jspdf;let doc=new jsPDF();doc.text(compNameV+" - Invoice",14,12);doc.autoTable({head:[["Item","Qty","Rate","GST %","Total"]],
+ body:billItems.map(it=>{let val=it.qty*it.rate;let tax=val*it.gst/100;return[it.name,it.qty,it.rate,it.gst,(val+tax).toFixed(2)];})});
+ let sub=billItems.reduce((a,i)=>a+i.qty*i.rate,0),taxAmt=billItems.reduce((a,i)=>a+(i.qty*i.rate*i.gst/100),0);let fy=doc.lastAutoTable.finalY+6;
+ doc.text(`Subtotal: ₹${sub.toFixed(2)}`,14,fy);doc.text(`Total Tax: ₹${taxAmt.toFixed(2)}`,14,fy+6);doc.setFontSize(13).text(`Grand Total: ₹${(sub+taxAmt).toFixed(2)}`,14,fy+12);
+ doc.save(compNameV+".pdf");}
+}
+
+/* ----- Company details save/load ----- */
+function saveCompanyDetails(){localStorage.setItem('companyDetails',JSON.stringify({name:compName.value,addr:compAddr.value,gst:compGST.value,logo:compLogo.dataset.base64||""}));}
+function loadCompanyDetails(){let d=JSON.parse(localStorage.getItem('companyDetails')||"{}");compName.value=d.name||"";compAddr.value=d.addr||"";compGST.value=d.gst||"";if(d.logo)compLogo.dataset.base64=d.logo;}
+document.addEventListener('change',e=>{if(e.target.id==='compLogo'&&e.target.files[0]){let fr=new FileReader();fr.onload=()=>{compLogo.dataset.base64=fr.result;saveCompanyDetails();};fr.readAsDataURL(e.target.files[0]);}});
+document.addEventListener('blur',e=>{if(['compName','compAddr','compGST'].includes(e.target.id))saveCompanyDetails();},true);
+
+/* ----- PWA manifest + SW ----- */
+const manifest={"name":"Finance Tools Suite","short_name":"FinTools","start_url":".","display":"standalone","background_color":"#0e1326","theme_color":"#4fb4ff","icons":[]};
+const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(blob);document.head.appendChild(link);
+if('serviceWorker' in navigator){navigator.serviceWorker.register(URL.createObjectURL(new Blob([`self.addEventListener('install',e=>{e.waitUntil(caches.open('v1').then(c=>c.addAll(['./'])))});
+ self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))});
+`],{type:'application/javascript'})));}
+
+/* Init */
+render();
 </script>
 </body>
 </html>
