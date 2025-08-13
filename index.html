@@ -3,108 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>All-in-One Online Tools</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Advanced Financial Calculator</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 font-sans text-gray-800">
 
-<header class="bg-green-500 text-white p-6 text-center">
-  <h1 class="text-3xl font-bold">All-in-One Online Tools</h1>
-  <p class="mt-2">Loan Calculator | Rent vs Buy Calculator</p>
+<header class="bg-gradient-to-r from-green-600 to-emerald-500 text-white py-6 shadow">
+  <div class="max-w-4xl mx-auto text-center">
+    <h1 class="text-3xl font-bold">Advanced Financial Calculator</h1>
+    <p class="mt-1 text-lg text-green-100">EMI Calculator • Rent vs Buy Analysis</p>
+  </div>
 </header>
 
-<nav class="flex justify-center gap-4 mt-4">
-  <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('loan')">Loan Calculator</button>
-  <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('rent')">Rent vs Buy Calculator</button>
-</nav>
-
-<!-- Loan Calculator -->
-<section id="loan" class="bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
-  <h2 class="text-2xl font-bold mb-4">Loan / EMI Calculator</h2>
-  <div class="grid gap-4">
-    <input type="number" id="loanAmount" placeholder="Loan Amount" class="p-2 border rounded">
-    <input type="number" id="loanRate" placeholder="Interest Rate (%)" class="p-2 border rounded">
-    <input type="number" id="loanYears" placeholder="Tenure (Years)" class="p-2 border rounded">
-    <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="calculateEMI()">Calculate EMI</button>
-    <div id="emiResult" class="font-bold mt-2"></div>
-    <canvas id="emiChart" class="mt-4"></canvas>
+<main class="max-w-4xl mx-auto p-6">
+  <!-- Navigation Tabs -->
+  <div class="flex border-b mb-6">
+    <button onclick="showSection('loan')" id="tab-loan" class="tab-btn border-b-2 border-green-500 px-4 py-2 text-green-600 font-semibold">Loan Calculator</button>
+    <button onclick="showSection('rent')" id="tab-rent" class="tab-btn px-4 py-2 text-gray-600 hover:text-green-600">Rent vs Buy</button>
   </div>
-</section>
 
-<!-- Rent vs Buy Calculator -->
-<section id="rent" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
-  <h2 class="text-2xl font-bold mb-4">Rent vs Buy Calculator</h2>
-  <div class="grid gap-4">
-    <input type="number" id="rentAmount" placeholder="Monthly Rent" class="p-2 border rounded">
-    <input type="number" id="homePrice" placeholder="Home Price" class="p-2 border rounded">
-    <input type="number" id="mortgageRate" placeholder="Interest Rate (%)" class="p-2 border rounded">
-    <input type="number" id="mortgageYears" placeholder="Loan Term (Years)" class="p-2 border rounded">
-    <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="calculateRentVsBuy()">Calculate</button>
-    <div id="rentResult" class="font-bold mt-2 whitespace-pre-line"></div>
-  </div>
-</section>
+  <!-- Loan Calculator -->
+  <section id="loan" class="bg-white rounded-xl shadow-lg p-6">
+    <h2 class="text-xl font-bold mb-4">Loan / EMI Calculator</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <input type="number" id="loanAmount" placeholder="Loan Amount (₹)" class="input">
+      <input type="number" id="loanRate" placeholder="Interest Rate (%)" step="0.01" class="input">
+      <input type="number" id="loanYears" placeholder="Tenure (Years)" class="input">
+    </div>
+    <button onclick="calculateEMI()" class="mt-4 w-full md:w-auto btn-primary">Calculate EMI</button>
+    
+    <div id="emiDetails" class="mt-6 hidden">
+      <p class="font-semibold text-lg">Monthly EMI: <span id="emiResult" class="text-green-600"></span></p>
+      <p>Total Payment: <span id="totalPayment"></span></p>
+      <p>Total Interest: <span id="totalInterest"></span></p>
+      <canvas id="emiChart" class="mt-6"></canvas>
+      <h3 class="mt-6 font-semibold">Amortization Schedule (Yearly)</h3>
+      <table class="mt-2 w-full text-sm border">
+        <thead class="bg-gray-100">
+          <tr><th class="p-2 border">Year</th><th class="p-2 border">Principal Paid</th><th class="p-2 border">Interest Paid</th><th class="p-2 border">Balance</th></tr>
+        </thead>
+        <tbody id="amortTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Rent vs Buy Calculator -->
+  <section id="rent" class="bg-white rounded-xl shadow-lg p-6 hidden">
+    <h2 class="text-xl font-bold mb-4">Rent vs Buy Calculator</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <input type="number" id="rentAmount" placeholder="Monthly Rent (₹)" class="input">
+      <input type="number" id="homePrice" placeholder="Home Price (₹)" class="input">
+      <input type="number" id="mortgageRate" placeholder="Loan Interest Rate (%)" step="0.01" class="input">
+      <input type="number" id="mortgageYears" placeholder="Loan Term (Years)" class="input">
+      <input type="number" id="annualRentIncrease" placeholder="Annual Rent Increase (%)" step="0.1" class="input">
+      <input type="number" id="propertyAppreciation" placeholder="Property Appreciation (%)" step="0.1" class="input">
+      <input type="number" id="maintenancePercent" placeholder="Annual Maintenance (% of price)" step="0.1" class="input">
+      <input type="number" id="downPaymentPercent" placeholder="Down Payment (%)" step="0.1" class="input">
+    </div>
+    <button onclick="calculateRentVsBuy()" class="mt-4 w-full md:w-auto btn-primary">Compare</button>
+    
+    <div id="rentBuyResult" class="mt-6 hidden">
+      <p class="font-semibold text-lg">Recommendation: <span id="rbAdvice" class="text-green-600"></span></p>
+      <canvas id="rbChart" class="mt-6"></canvas>
+    </div>
+  </section>
+</main>
 
 <script>
-// Section switch functionality
-function showSection(id){
-  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+// Tailwind helpers
+document.querySelectorAll('.input').forEach(el => el.classList.add('p-2','border','rounded','w-full'));
+function setActiveTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('border-green-500','text-green-600','font-semibold');
+    btn.classList.add('text-gray-600');
+  });
+  document.getElementById(`tab-${tab}`).classList.add('border-green-500','text-green-600','font-semibold');
 }
-showSection('loan');
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  setActiveTab(id);
+}
 
-// ------------------- Loan Calculator -------------------
-let emiChart = null;
-function calculateEMI(){
-  const P = parseFloat(document.getElementById('loanAmount').value);
-  const r = parseFloat(document.getElementById('loanRate').value)/12/100;
-  const n = parseFloat(document.getElementById('loanYears').value)*12;
+let emiChartObj = null;
+function calculateEMI() {
+  const P = parseFloat(loanAmount.value);
+  const r = parseFloat(loanRate.value)/12/100;
+  const n = parseFloat(loanYears.value)*12;
+  if(!P || !r || !n) return alert('Please fill in valid values');
 
   const EMI = (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+  const totalPayment = EMI * n;
+  const totalInterest = totalPayment - P;
 
-  if(!isNaN(EMI) && isFinite(EMI)){
-    document.getElementById('emiResult').innerText = 'Monthly EMI: ₹'+EMI.toFixed(2);
-    const ctxChart = document.getElementById('emiChart').getContext('2d');
-    if(emiChart) emiChart.destroy();
-    emiChart = new Chart(ctxChart, {
-      type: 'pie',
-      data: {
-        labels:['Principal','Interest'],
-        datasets:[{data:[P, EMI*n - P], backgroundColor:['#4CAF50','#F87171']}]
-      }
-    });
-  } else {
-    document.getElementById('emiResult').innerText = 'Please enter valid values!';
-    if(emiChart) { emiChart.destroy(); emiChart = null; }
+  emiResult.textContent = `₹${EMI.toFixed(2)}`;
+  totalPayment.textContent = `₹${totalPayment.toFixed(2)}`;
+  totalInterest.textContent = `₹${totalInterest.toFixed(2)}`;
+
+  const labels = ['Principal', 'Interest'];
+  const data = [P, totalInterest];
+  const ctx = document.getElementById('emiChart').getContext('2d');
+  if(emiChartObj) emiChartObj.destroy();
+  emiChartObj = new Chart(ctx, {
+    type: 'pie',
+    data: {labels, datasets:[{data, backgroundColor:['#10B981','#F87171']}]}
+  });
+
+  // Amortization schedule
+  const tableBody = document.getElementById('amortTable');
+  tableBody.innerHTML = '';
+  let balance = P;
+  for(let year=1; year<=n/12; year++){
+    let interestYear = 0;
+    let principalYear = 0;
+    for(let m=1; m<=12; m++){
+      const interest = balance * r;
+      const principal = EMI - interest;
+      balance -= principal;
+      interestYear += interest;
+      principalYear += principal;
+    }
+    tableBody.innerHTML += `<tr>
+      <td class="border p-1 text-center">${year}</td>
+      <td class="border p-1 text-right">₹${principalYear.toFixed(0)}</td>
+      <td class="border p-1 text-right">₹${interestYear.toFixed(0)}</td>
+      <td class="border p-1 text-right">₹${Math.max(balance,0).toFixed(0)}</td>
+    </tr>`;
   }
+
+  document.getElementById('emiDetails').classList.remove('hidden');
 }
 
-// ------------------- Rent vs Buy Calculator -------------------
+let rbChartObj = null;
 function calculateRentVsBuy(){
-  const years = parseFloat(document.getElementById('mortgageYears').value);
-  const rentMonthly = parseFloat(document.getElementById('rentAmount').value);
-  const price = parseFloat(document.getElementById('homePrice').value);
-  const r = parseFloat(document.getElementById('mortgageRate').value)/12/100;
-  const n = years*12;
+  const rent = parseFloat(rentAmount.value);
+  const price = parseFloat(homePrice.value);
+  const r = parseFloat(mortgageRate.value)/12/100;
+  const years = parseFloat(mortgageYears.value);
+  const n = years * 12;
+  const rentIncrease = (parseFloat(annualRentIncrease.value)||0)/100;
+  const appreciation = (parseFloat(propertyAppreciation.value)||0)/100;
+  const maintenance = (parseFloat(maintenancePercent.value)||0)/100;
+  const downPaymentPct = (parseFloat(downPaymentPercent.value)||0)/100;
 
-  const rentAnnual = rentMonthly*12;
-  const EMI = (price*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
-  const totalBuy = EMI*n;
+  if(!rent || !price || !r || !years) return alert("Please fill in required fields");
 
-  if(isFinite(totalBuy)){
-    const totalRent = rentAnnual*years;
-    const simpleAdvice = totalBuy > totalRent
-      ? 'Renting may be cheaper in this simple model'
-      : 'Buying may be cheaper in this simple model';
-    document.getElementById('rentResult').innerText =
-      'Total Cost of Buying: ₹'+totalBuy.toFixed(2)+'\n'+
-      'Total Rent Paid: ₹'+totalRent.toFixed(2)+'\n'+
-      'Note: ignores taxes, insurance, maintenance, appreciation, rent growth, and opportunity cost.\n'+
-      'Result: '+simpleAdvice;
-  } else {
-    document.getElementById('rentResult').innerText = 'Please enter valid values!';
+  const downPayment = price * downPaymentPct;
+  const loanAmount = price - downPayment;
+  const EMI = (loanAmount*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+
+  let totalRentPaid = 0;
+  let annualRent = rent*12;
+  for(let i=0;i<years;i++){
+    totalRentPaid += annualRent;
+    annualRent *= (1 + rentIncrease);
   }
+
+  let totalBuyCost = 0;
+  let balance = loanAmount;
+  for(let i=0;i<years;i++){
+    totalBuyCost += EMI*12;
+    totalBuyCost += price * maintenance;
+    price *= (1+appreciation);
+  }
+  totalBuyCost += downPayment;
+
+  const advice = totalBuyCost > totalRentPaid ? 'Renting may be cheaper' : 'Buying may be cheaper';
+  rbAdvice.textContent = `${advice} (Difference: ₹${Math.abs(totalBuyCost-totalRentPaid).toFixed(0)})`;
+
+  const ctx = document.getElementById('rbChart').getContext('2d');
+  if(rbChartObj) rbChartObj.destroy();
+  rbChartObj = new Chart(ctx, {
+    type: 'bar',
+    data: {labels:['Total Rent Paid','Total Buy Cost'], datasets:[{data:[totalRentPaid, totalBuyCost], backgroundColor:['#60A5FA','#FBBF24']}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+  });
+
+  document.getElementById('rentBuyResult').classList.remove('hidden');
 }
 </script>
+
+<style>
+.btn-primary { @apply bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700; }
+</style>
 </body>
 </html>
