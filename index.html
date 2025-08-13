@@ -1,304 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced PDF Editor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#4f46e5',
-                        secondary: '#818cf8',
-                        dark: '#1e293b',
-                        light: '#f8fafc'
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        .pdf-page {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transition: all 0.3s ease;
-        }
-        .pdf-page:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .toolbar-btn {
-            transition: all 0.2s ease;
-        }
-        .toolbar-btn:hover {
-            background-color: #4f46e5;
-            color: white;
-        }
-        .sidebar-item {
-            transition: all 0.2s ease;
-        }
-        .sidebar-item:hover {
-            background-color: #eef2ff;
-        }
-        .active-sidebar {
-            background-color: #e0e7ff;
-            border-left: 3px solid #4f46e5;
-        }
-        .tool-highlight {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
-        }
-        .zoom-controls {
-            transition: all 0.3s ease;
-        }
-        .zoom-controls:hover {
-            transform: scale(1.05);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All-in-One Online Tools</title>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans">
-    <!-- Main Container -->
-    <div class="flex flex-col h-screen">
-        <!-- Header -->
-        <header class="bg-white shadow-sm py-3 px-4 flex items-center justify-between">
-            <div class="flex items-center">
-                <div class="bg-primary text-white p-2 rounded-lg mr-3">
-                    <i class="fas fa-file-pdf text-xl"></i>
-                </div>
-                <h1 class="text-xl font-bold text-gray-800">Advanced PDF Editor</h1>
-            </div>
-            <div class="flex items-center space-x-3">
-                <button class="bg-primary hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center">
-                    <i class="fas fa-save mr-2"></i> Save
-                </button>
-                <button class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center">
-                    <i class="fas fa-download mr-2"></i> Export
-                </button>
-                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                    <i class="fas fa-user text-gray-600"></i>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <div class="flex flex-1 overflow-hidden">
-            <!-- Sidebar -->
-            <div class="w-64 bg-white shadow-md p-4 flex flex-col">
-                <div class="mb-6">
-                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Documents</h2>
-                    <div class="space-y-2">
-                        <div class="sidebar-item p-2 rounded cursor-pointer active-sidebar flex items-center">
-                            <i class="fas fa-file-pdf text-red-500 mr-2"></i>
-                            <span>Annual Report 2023.pdf</span>
-                        </div>
-                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
-                            <i class="fas fa-file-pdf text-red-500 mr-2"></i>
-                            <span>Project Proposal.pdf</span>
-                        </div>
-                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
-                            <i class="fas fa-file-pdf text-red-500 mr-2"></i>
-                            <span>Contract Agreement.pdf</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mb-6">
-                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Tools</h2>
-                    <div class="space-y-2">
-                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
-                            <i class="fas fa-mouse-pointer text-gray-600 mr-2"></i>
-                            <span>Select Tool</span>
-                        </div>
-                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center tool-highlight">
-                            <i class="fas fa-pen text-blue-500 mr-2"></i>
-                            <span>Pen Tool</span>
-                        </div>
-                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
-                            <i class="fas fa-font text-green-500 mr-2"></i>
-                            <span>Text Tool</span>
-                        </div>
-                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
-                            <i class="fas fa-shapes text-purple-500 mr-2"></i>
-                            <span>Shapes</span>
-                        </div>
-                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
-                            <i class="fas fa-comment-dots text-yellow-500 mr-2"></i>
-                            <span>Comments</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-auto">
-                    <button class="w-full bg-primary hover:bg-indigo-700 text-white py-2 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-plus mr-2"></i> New Document
-                    </button>
-                </div>
-            </div>
-
-            <!-- Main Editing Area -->
-            <div class="flex-1 flex flex-col overflow-hidden">
-                <!-- Toolbar -->
-                <div class="bg-white shadow-sm py-3 px-4 flex items-center justify-between">
-                    <div class="flex space-x-2">
-                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
-                            <i class="fas fa-undo mr-2"></i> Undo
-                        </button>
-                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
-                            <i class="fas fa-redo mr-2"></i> Redo
-                        </button>
-                        <div class="border-r border-gray-300 mx-2"></div>
-                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
-                            <i class="fas fa-crop mr-2"></i> Crop
-                        </button>
-                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
-                            <i class="fas fa-rotate-right mr-2"></i> Rotate
-                        </button>
-                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
-                            <i class="fas fa-compress-alt mr-2"></i> Compress
-                        </button>
-                    </div>
-                    
-                    <div class="flex items-center space-x-4">
-                        <div class="zoom-controls bg-gray-100 rounded-lg px-3 py-1 flex items-center">
-                            <button class="text-gray-600 hover:text-primary">
-                                <i class="fas fa-search-minus"></i>
-                            </button>
-                            <span class="mx-2 text-gray-700">100%</span>
-                            <button class="text-gray-600 hover:text-primary">
-                                <i class="fas fa-search-plus"></i>
-                            </button>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
-                                <i class="fas fa-minus text-gray-600"></i>
-                            </button>
-                            <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
-                                <i class="fas fa-expand text-gray-600"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- PDF Viewer -->
-                <div class="flex-1 overflow-auto bg-gray-200 p-6 flex justify-center items-start">
-                    <div class="pdf-page bg-white w-3/4 max-w-4xl min-h-screen p-8 relative">
-                        <!-- PDF Content -->
-                        <div class="absolute top-4 left-4 text-gray-500 text-sm">Page 1 of 5</div>
-                        
-                        <h1 class="text-3xl font-bold text-center my-8">Annual Financial Report 2023</h1>
-                        
-                        <div class="grid grid-cols-2 gap-8 my-8">
-                            <div>
-                                <h2 class="text-xl font-semibold mb-4">Company Overview</h2>
-                                <p class="text-gray-700 mb-4">Our company has achieved significant growth in 2023, with a 15% increase in revenue compared to the previous year. This growth is attributed to our successful expansion into new markets and the launch of innovative products.</p>
-                                <p class="text-gray-700">We continue to prioritize sustainability and have reduced our carbon footprint by 20% through various initiatives.</p>
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-semibold mb-4">Financial Highlights</h2>
-                                <ul class="list-disc pl-5 text-gray-700 space-y-2">
-                                    <li>Revenue: $42.5M (↑15%)</li>
-                                    <li>Net Profit: $8.2M (↑18%)</li>
-                                    <li>Total Assets: $65.3M (↑12%)</li>
-                                    <li>Employee Count: 342 (↑8%)</li>
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <div class="my-8">
-                            <h2 class="text-xl font-semibold mb-4">Quarterly Performance</h2>
-                            <div class="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-                                <div class="text-center">
-                                    <i class="fas fa-chart-line text-3xl text-gray-400 mb-2"></i>
-                                    <p class="text-gray-500">Revenue Growth Chart</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="my-8">
-                            <h2 class="text-xl font-semibold mb-4">Future Outlook</h2>
-                            <p class="text-gray-700">For 2024, we plan to expand our operations to three new international markets and invest 15% of revenue in R&D to develop next-generation products. We are confident in our ability to maintain our growth trajectory while delivering value to our stakeholders.</p>
-                        </div>
-                        
-                        <!-- Annotation Example -->
-                        <div class="absolute top-32 right-16 bg-yellow-100 border-l-4 border-yellow-500 p-3 rounded">
-                            <p class="text-sm">Important: Verify these figures with accounting department</p>
-                        </div>
-                        
-                        <div class="absolute bottom-20 left-16 bg-blue-100 border-l-4 border-blue-500 p-3 rounded">
-                            <p class="text-sm">Add chart from Q3 financials</p>
-                        </div>
-                        
-                        <!-- Drawing Example -->
-                        <svg class="absolute top-64 left-1/4 w-32 h-32" viewBox="0 0 100 100">
-                            <path d="M20,20 Q50,5 80,20 T140,20" stroke="#4f46e5" stroke-width="2" fill="none" stroke-dasharray="5,5"/>
-                        </svg>
-                        
-                        <!-- Text Highlight -->
-                        <mark class="bg-yellow-200">This section requires executive review</mark>
-                    </div>
-                </div>
-                
-                <!-- Properties Panel -->
-                <div class="bg-white border-t py-3 px-4 flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center">
-                            <span class="text-gray-600 mr-2">Pen:</span>
-                            <div class="w-6 h-6 rounded-full bg-blue-500 mr-2"></div>
-                            <span class="text-gray-800 font-medium">Blue</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-gray-600 mr-2">Size:</span>
-                            <span class="text-gray-800 font-medium">3px</span>
-                        </div>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
-                            <i class="fas fa-eraser text-gray-600"></i>
-                        </button>
-                        <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
-                            <i class="fas fa-fill-drip text-gray-600"></i>
-                        </button>
-                        <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
-                            <i class="fas fa-palette text-gray-600"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Simple interactivity for demonstration
-        document.addEventListener('DOMContentLoaded', function() {
-            // Toolbar button interactions
-            const toolbarButtons = document.querySelectorAll('.toolbar-btn');
-            toolbarButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    toolbarButtons.forEach(btn => btn.classList.remove('bg-primary', 'text-white'));
-                    this.classList.add('bg-primary', 'text-white');
-                });
-            });
-            
-            // Sidebar item interactions
-            const sidebarItems = document.querySelectorAll('.sidebar-item');
-            sidebarItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    sidebarItems.forEach(i => i.classList.remove('active-sidebar'));
-                    this.classList.add('active-sidebar');
-                });
-            });
-            
-            // Highlight tool demonstration
-            setTimeout(() => {
-                document.querySelector('.tool-highlight').classList.remove('tool-highlight');
-            }, 3000);
-        });
-    </script>
-</body>
-</html>
+<body class="bg-gray-100 font-sans"><header class="bg-green-500 text-white p-6 text-center">
+  <h1 class="text-3xl font-bold">All-in-One Online Tools</h1>
+  <p class="mt-2">PDF Editor | Loan Calculator | Rent vs Buy Calculator</p>
+</header><nav class="flex justify-center gap-4 mt-4">
+  <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('pdf')">PDF Editor</button>
+  <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('loan')">Loan Calculator</button>
+  <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('rent')">Rent vs Buy Calculator</button>
+</nav><section id="pdf" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
+  <h2 class="text-2xl font-bold mb-4">PDF Editor</h2>
+  <input type="file" id="pdfFile" accept="application/pdf" class="mb-4 p-2 border rounded w-full">
+  <canvas id="pdfCanvas" class="border rounded w-full"></canvas>
+  <div class="mt-4 flex gap-2">
+    <button id="addTextBtn" class="px-4 py-2 bg-blue-500 text-white rounded">Add Text</button>
+    <button id="downloadPDFBtn" class="px-4 py-2 bg-green-500 text-white rounded">Download PDF</button>
+  </div>
+</section><section id="loan" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
+  <h2 class="text-2xl font-bold mb-4">Loan / EMI Calculator</h2>
+  <div class="grid gap-4">
+    <input type="number" id="loanAmount" placeholder="Loan Amount" class="p-2 border rounded">
+    <input type="number" id="loanRate" placeholder="Interest Rate (%)" class="p-2 border rounded">
+    <input type="number" id="loanYears" placeholder="Tenure (Years)" class="p-2 border rounded">
+    <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="calculateEMI()">Calculate EMI</button>
+    <div id="emiResult
