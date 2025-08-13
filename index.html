@@ -1,354 +1,304 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Advanced PDF Editor — HTML Demo</title>
-
-  <!-- Tailwind CDN for rapid styling (Replace with build-time Tailwind for production) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- PDF.js (for rendering) and pdf-lib (for editing/export) -->
-  <script src="https://unpkg.com/pdfjs-dist@3.9.179/legacy/build/pdf.min.js"></script>
-  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-
-  <style>
-    /* small helpers */
-    .page-wrap { position: relative; display: inline-block; }
-    .overlay { position: absolute; left: 0; top: 0; pointer-events: none; }
-    .text-box { position: absolute; pointer-events: auto; background: rgba(255,255,255,0.8); border: 1px dashed #999; padding: 6px; min-width: 80px; border-radius: 4px; }
-    .redaction { position: absolute; background: black; pointer-events: auto; border-radius: 2px; }
-    .canvas-container { overflow-x: auto; }
-    /* small responsive tweak for the color input on some browsers */
-    input[type="color"] { padding: 2px; height: 38px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced PDF Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#818cf8',
+                        dark: '#1e293b',
+                        light: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .pdf-page {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+        .pdf-page:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .toolbar-btn {
+            transition: all 0.2s ease;
+        }
+        .toolbar-btn:hover {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background-color: #eef2ff;
+        }
+        .active-sidebar {
+            background-color: #e0e7ff;
+            border-left: 3px solid #4f46e5;
+        }
+        .tool-highlight {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+        .zoom-controls {
+            transition: all 0.3s ease;
+        }
+        .zoom-controls:hover {
+            transform: scale(1.05);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-slate-800">
-  <div class="max-w-7xl mx-auto p-4">
-    <header class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-semibold">Advanced PDF Editor — HTML Demo</h1>
-      <div class="flex gap-2">
-        <input id="fileInput" type="file" accept="application/pdf" />
-        <button id="exportBtn" class="px-3 py-1 bg-blue-600 text-white rounded">Export PDF</button>
-        <button id="undoBtn" class="px-3 py-1 border rounded">Undo</button>
-        <button id="redoBtn" class="px-3 py-1 border rounded">Redo</button>
-      </div>
-    </header>
-
-    <div class="grid grid-cols-12 gap-4">
-      <!-- Tools -->
-      <aside class="col-span-12 md:col-span-3 bg-white p-3 rounded shadow">
-        <div class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium">Tool</label>
-            <div class="mt-2 flex gap-2">
-              <button data-tool="select" class="tool-btn px-3 py-1 border rounded">Select</button>
-              <button data-tool="text" class="tool-btn px-3 py-1 border rounded">Add Text</button>
-              <button data-tool="erase" class="tool-btn px-3 py-1 border rounded">Erase</button>
+<body class="bg-gray-100 font-sans">
+    <!-- Main Container -->
+    <div class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm py-3 px-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="bg-primary text-white p-2 rounded-lg mr-3">
+                    <i class="fas fa-file-pdf text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800">Advanced PDF Editor</h1>
             </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium">Font family</label>
-            <select id="fontFamily" class="w-full border p-1 rounded mt-1">
-              <option value="Helvetica">Helvetica</option>
-              <option value="Times-Roman">Times New Roman</option>
-              <option value="Courier">Courier</option>
-              <option value="Arial">Arial</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2">
-            <div>
-              <label class="block text-sm">Size</label>
-              <input id="fontSize" type="number" value="18" class="w-full border p-1 rounded mt-1" />
+            <div class="flex items-center space-x-3">
+                <button class="bg-primary hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-save mr-2"></i> Save
+                </button>
+                <button class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-download mr-2"></i> Export
+                </button>
+                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                    <i class="fas fa-user text-gray-600"></i>
+                </div>
             </div>
-            <div>
-              <label class="block text-sm">Bold</label>
-              <input id="fontBold" type="checkbox" class="mt-3" />
-            </div>
-            <div>
-              <label class="block text-sm">Italic</label>
-              <input id="fontItalic" type="checkbox" class="mt-3" />
-            </div>
-          </div>
+        </header>
 
-          <div>
-            <label class="block text-sm">Color</label>
-            <input id="fontColor" type="color" value="#000000" class="w-full mt-1" />
-          </div>
-
-          <div>
-            <label class="block text-sm">Layering</label>
-            <div class="mt-2 flex gap-2">
-              <button id="bringForwardBtn" class="px-2 py-1 border rounded">Bring Forward</button>
-              <button id="sendBackwardBtn" class="px-2 py-1 border rounded">Send Back</button>
+        <!-- Main Content -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white shadow-md p-4 flex flex-col">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Documents</h2>
+                    <div class="space-y-2">
+                        <div class="sidebar-item p-2 rounded cursor-pointer active-sidebar flex items-center">
+                            <i class="fas fa-file-pdf text-red-500 mr-2"></i>
+                            <span>Annual Report 2023.pdf</span>
+                        </div>
+                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
+                            <i class="fas fa-file-pdf text-red-500 mr-2"></i>
+                            <span>Project Proposal.pdf</span>
+                        </div>
+                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
+                            <i class="fas fa-file-pdf text-red-500 mr-2"></i>
+                            <span>Contract Agreement.pdf</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Tools</h2>
+                    <div class="space-y-2">
+                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
+                            <i class="fas fa-mouse-pointer text-gray-600 mr-2"></i>
+                            <span>Select Tool</span>
+                        </div>
+                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center tool-highlight">
+                            <i class="fas fa-pen text-blue-500 mr-2"></i>
+                            <span>Pen Tool</span>
+                        </div>
+                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
+                            <i class="fas fa-font text-green-500 mr-2"></i>
+                            <span>Text Tool</span>
+                        </div>
+                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
+                            <i class="fas fa-shapes text-purple-500 mr-2"></i>
+                            <span>Shapes</span>
+                        </div>
+                        <div class="sidebar-item p-2 rounded cursor-pointer flex items-center">
+                            <i class="fas fa-comment-dots text-yellow-500 mr-2"></i>
+                            <span>Comments</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-auto">
+                    <button class="w-full bg-primary hover:bg-indigo-700 text-white py-2 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i> New Document
+                    </button>
+                </div>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-sm">Workspace</label>
-            <div class="mt-2 flex gap-2">
-              <button id="saveWs" class="px-2 py-1 border rounded">Save</button>
-              <button id="loadWs" class="px-2 py-1 border rounded">Load</button>
+            <!-- Main Editing Area -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Toolbar -->
+                <div class="bg-white shadow-sm py-3 px-4 flex items-center justify-between">
+                    <div class="flex space-x-2">
+                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-undo mr-2"></i> Undo
+                        </button>
+                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-redo mr-2"></i> Redo
+                        </button>
+                        <div class="border-r border-gray-300 mx-2"></div>
+                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-crop mr-2"></i> Crop
+                        </button>
+                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-rotate-right mr-2"></i> Rotate
+                        </button>
+                        <button class="toolbar-btn bg-gray-100 hover:bg-primary text-gray-700 hover:text-white px-3 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-compress-alt mr-2"></i> Compress
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="zoom-controls bg-gray-100 rounded-lg px-3 py-1 flex items-center">
+                            <button class="text-gray-600 hover:text-primary">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <span class="mx-2 text-gray-700">100%</span>
+                            <button class="text-gray-600 hover:text-primary">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
+                                <i class="fas fa-minus text-gray-600"></i>
+                            </button>
+                            <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
+                                <i class="fas fa-expand text-gray-600"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PDF Viewer -->
+                <div class="flex-1 overflow-auto bg-gray-200 p-6 flex justify-center items-start">
+                    <div class="pdf-page bg-white w-3/4 max-w-4xl min-h-screen p-8 relative">
+                        <!-- PDF Content -->
+                        <div class="absolute top-4 left-4 text-gray-500 text-sm">Page 1 of 5</div>
+                        
+                        <h1 class="text-3xl font-bold text-center my-8">Annual Financial Report 2023</h1>
+                        
+                        <div class="grid grid-cols-2 gap-8 my-8">
+                            <div>
+                                <h2 class="text-xl font-semibold mb-4">Company Overview</h2>
+                                <p class="text-gray-700 mb-4">Our company has achieved significant growth in 2023, with a 15% increase in revenue compared to the previous year. This growth is attributed to our successful expansion into new markets and the launch of innovative products.</p>
+                                <p class="text-gray-700">We continue to prioritize sustainability and have reduced our carbon footprint by 20% through various initiatives.</p>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-semibold mb-4">Financial Highlights</h2>
+                                <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                                    <li>Revenue: $42.5M (↑15%)</li>
+                                    <li>Net Profit: $8.2M (↑18%)</li>
+                                    <li>Total Assets: $65.3M (↑12%)</li>
+                                    <li>Employee Count: 342 (↑8%)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="my-8">
+                            <h2 class="text-xl font-semibold mb-4">Quarterly Performance</h2>
+                            <div class="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-chart-line text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-gray-500">Revenue Growth Chart</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="my-8">
+                            <h2 class="text-xl font-semibold mb-4">Future Outlook</h2>
+                            <p class="text-gray-700">For 2024, we plan to expand our operations to three new international markets and invest 15% of revenue in R&D to develop next-generation products. We are confident in our ability to maintain our growth trajectory while delivering value to our stakeholders.</p>
+                        </div>
+                        
+                        <!-- Annotation Example -->
+                        <div class="absolute top-32 right-16 bg-yellow-100 border-l-4 border-yellow-500 p-3 rounded">
+                            <p class="text-sm">Important: Verify these figures with accounting department</p>
+                        </div>
+                        
+                        <div class="absolute bottom-20 left-16 bg-blue-100 border-l-4 border-blue-500 p-3 rounded">
+                            <p class="text-sm">Add chart from Q3 financials</p>
+                        </div>
+                        
+                        <!-- Drawing Example -->
+                        <svg class="absolute top-64 left-1/4 w-32 h-32" viewBox="0 0 100 100">
+                            <path d="M20,20 Q50,5 80,20 T140,20" stroke="#4f46e5" stroke-width="2" fill="none" stroke-dasharray="5,5"/>
+                        </svg>
+                        
+                        <!-- Text Highlight -->
+                        <mark class="bg-yellow-200">This section requires executive review</mark>
+                    </div>
+                </div>
+                
+                <!-- Properties Panel -->
+                <div class="bg-white border-t py-3 px-4 flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <span class="text-gray-600 mr-2">Pen:</span>
+                            <div class="w-6 h-6 rounded-full bg-blue-500 mr-2"></div>
+                            <span class="text-gray-800 font-medium">Blue</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-gray-600 mr-2">Size:</span>
+                            <span class="text-gray-800 font-medium">3px</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
+                            <i class="fas fa-eraser text-gray-600"></i>
+                        </button>
+                        <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
+                            <i class="fas fa-fill-drip text-gray-600"></i>
+                        </button>
+                        <button class="bg-gray-200 hover:bg-gray-300 w-8 h-8 rounded-full flex items-center justify-center">
+                            <i class="fas fa-palette text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div class="text-xs text-gray-500">Notes: This demo uses a raster preview (PDF.js) and pdf-lib for export. For production, use server-side validation, sandboxed workers, and stronger PDF content handling.</div>
         </div>
-      </aside>
-
-      <!-- Canvas area -->
-      <main class="col-span-12 md:col-span-9 bg-white p-3 rounded shadow">
-        <div class="mb-2 flex items-center gap-3">
-          <label class="text-sm">Page</label>
-          <select id="pageSelect" class="border p-1 rounded"></select>
-        </div>
-
-        <div id="canvasArea" class="canvas-container border p-3 rounded min-h-[400px] flex flex-col items-start gap-4"></div>
-      </main>
     </div>
 
-    <footer class="mt-6 text-sm text-gray-600">Tip: Drag text boxes to move them. In erase mode click-and-drag to draw a redaction rectangle.</footer>
-  </div>
-
-  <script>
-    // --- Globals and state ---
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.9.179/legacy/build/pdf.worker.min.js';
-
-    const state = {
-      pdfBytes: null,
-      pdfDoc: null, // pdf.js doc
-      pages: [], // {pageNumber, width, height, canvas}
-      currentPage: 1,
-      textBoxes: [], // {id,page,x,y,width,fontSize,fontFamily,bold,italic,color,text,z}
-      redactions: [], // {id,page,x,y,w,h}
-      tool: 'select',
-      nextId: 1,
-      history: [],
-      future: [],
-      selectedBoxId: null,
-    };
-
-    // Helpers
-    const $ = (id) => document.getElementById(id);
-    function uid(){ return state.nextId++; }
-
-    // File input
-    $('fileInput').addEventListener('change', async (e)=>{
-      const file = e.target.files[0];
-      if(!file) return;
-      const arrayBuffer = await file.arrayBuffer();
-      state.pdfBytes = arrayBuffer;
-      await loadPdf(arrayBuffer);
-      renderPageSelect();
-      renderCanvasArea();
-      pushHistory({type:'load'});
-    });
-
-    // Tool buttons
-    document.querySelectorAll('.tool-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('bg-gray-200'));
-        btn.classList.add('bg-gray-200');
-        state.tool = btn.dataset.tool;
-        // Re-render so erase tool attaches drawing handlers
-        renderCanvasArea();
-      });
-    });
-
-    // Default select
-    document.querySelector('.tool-btn[data-tool="select"]').classList.add('bg-gray-200');
-
-    // Load PDF via pdf.js and rasterize pages
-    async function loadPdf(arrayBuffer){
-      const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
-      const pdf = await loadingTask.promise;
-      state.pdfDoc = pdf;
-      state.pages = [];
-      for(let i=1;i<=pdf.numPages;i++){
-        const page = await pdf.getPage(i);
-        const viewport = page.getViewport({scale: 1.5});
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const ctx = canvas.getContext('2d');
-        await page.render({canvasContext: ctx, viewport}).promise;
-        state.pages.push({pageNumber: i, width: viewport.width, height: viewport.height, canvas});
-      }
-      state.currentPage = 1;
-    }
-
-    function renderPageSelect(){
-      const sel = $('pageSelect');
-      sel.innerHTML = '';
-      state.pages.forEach(p=>{ const o = document.createElement('option'); o.value = p.pageNumber; o.textContent = 'Page '+p.pageNumber; sel.appendChild(o); });
-      sel.value = state.currentPage;
-      sel.addEventListener('change', ()=>{ state.currentPage = parseInt(sel.value); renderCanvasArea(); });
-    }
-
-    // Render canvas and overlays for all pages (inlined)
-    function renderCanvasArea(){
-      const area = $('canvasArea');
-      area.innerHTML = '';
-      state.pages.forEach(p=>{
-        const wrap = document.createElement('div');
-        wrap.className = 'page-wrap';
-        wrap.style.width = p.width + 'px';
-        wrap.style.height = p.height + 'px';
-        wrap.dataset.page = p.pageNumber;
-
-        // base canvas
-        const base = p.canvas.cloneNode(true);
-        base.style.display = 'block';
-        wrap.appendChild(base);
-
-        // overlay container
-        const overlay = document.createElement('div');
-        overlay.className = 'overlay';
-        overlay.style.width = p.width + 'px';
-        overlay.style.height = p.height + 'px';
-        overlay.style.left = '0px'; overlay.style.top = '0px';
-        overlay.style.pointerEvents = 'none';
-        wrap.appendChild(overlay);
-
-        // render redactions for this page
-        state.redactions.filter(r=>r.page===p.pageNumber).forEach(r=>{
-          const d = document.createElement('div'); d.className='redaction'; d.style.left=r.x+'px'; d.style.top=r.y+'px'; d.style.width=r.w+'px'; d.style.height=r.h+'px'; d.style.pointerEvents='auto'; d.dataset.rid = r.id;
-          // allow removal on double click
-          d.addEventListener('dblclick', ()=>{ state.redactions = state.redactions.filter(rr=>rr.id!==r.id); pushHistory({type:'delRedact', payload:r}); renderCanvasArea(); });
-          overlay.appendChild(d);
+    <script>
+        // Simple interactivity for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toolbar button interactions
+            const toolbarButtons = document.querySelectorAll('.toolbar-btn');
+            toolbarButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    toolbarButtons.forEach(btn => btn.classList.remove('bg-primary', 'text-white'));
+                    this.classList.add('bg-primary', 'text-white');
+                });
+            });
+            
+            // Sidebar item interactions
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            sidebarItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    sidebarItems.forEach(i => i.classList.remove('active-sidebar'));
+                    this.classList.add('active-sidebar');
+                });
+            });
+            
+            // Highlight tool demonstration
+            setTimeout(() => {
+                document.querySelector('.tool-highlight').classList.remove('tool-highlight');
+            }, 3000);
         });
-
-        // render text boxes for this page
-        const texts = state.textBoxes.filter(t=>t.page===p.pageNumber).sort((a,b)=>a.z-b.z);
-        texts.forEach(tb=>{
-          const el = document.createElement('div');
-          el.className='text-box';
-          el.contentEditable = true;
-          el.innerText = tb.text || 'New text';
-          el.style.left = tb.x + 'px'; el.style.top = tb.y + 'px'; el.style.minWidth = (tb.width||120) + 'px';
-          el.style.fontSize = tb.fontSize + 'px';
-          el.style.fontFamily = tb.fontFamily;
-          el.style.fontWeight = tb.bold ? '700' : '400';
-          el.style.fontStyle = tb.italic ? 'italic' : 'normal';
-          el.style.color = tb.color;
-          el.style.pointerEvents = 'auto';
-          el.dataset.tid = tb.id;
-
-          // selection outline
-          el.addEventListener('click', (ev)=>{
-            ev.stopPropagation();
-            selectBox(tb.id);
-          });
-
-          el.addEventListener('input', (ev)=>{
-            tb.text = el.innerText;
-          });
-
-          // simple drag
-          makeDraggable(el, (x,y)=>{ tb.x = x; tb.y = y; });
-
-          overlay.appendChild(el);
-        });
-
-        // when in erase tool, allow drawing redaction rectangles on this page
-        if(state.tool === 'erase'){
-          let isDown = false; let startX=0, startY=0; let tempRect = null;
-          base.style.cursor = 'crosshair';
-          base.addEventListener('mousedown', mdown);
-          function mdown(e){
-            isDown = true; const rect = base.getBoundingClientRect(); startX = e.clientX - rect.left; startY = e.clientY - rect.top;
-            tempRect = document.createElement('div'); tempRect.className='redaction'; tempRect.style.opacity = 0.6; tempRect.style.left = startX+'px'; tempRect.style.top = startY+'px'; tempRect.style.width='0px'; tempRect.style.height='0px'; tempRect.style.pointerEvents = 'none'; overlay.appendChild(tempRect);
-            window.addEventListener('mousemove', mmove);
-            window.addEventListener('mouseup', mup);
-          }
-          function mmove(e){ if(!isDown) return; const rect = base.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top; const w = Math.abs(cx - startX); const h = Math.abs(cy - startY); tempRect.style.left = Math.min(cx,startX)+'px'; tempRect.style.top = Math.min(cy,startY)+'px'; tempRect.style.width = w+'px'; tempRect.style.height = h+'px'; }
-          function mup(e){ if(!isDown) return; isDown=false; window.removeEventListener('mousemove', mmove); window.removeEventListener('mouseup', mup); tempRect.style.pointerEvents = 'auto'; // finalize
-            const id = uid(); const x = parseFloat(tempRect.style.left); const y = parseFloat(tempRect.style.top); const w = parseFloat(tempRect.style.width); const h = parseFloat(tempRect.style.height);
-            state.redactions.push({id,page:p.pageNumber,x,y,w,h}); pushHistory({type:'addRedact', payload:{id,page:p.pageNumber,x,y,w,h}}); renderCanvasArea(); }
-        } else {
-          base.style.cursor = 'default';
-        }
-
-        area.appendChild(wrap);
-      });
-    }
-
-    // Make an element draggable within its parent
-    function makeDraggable(el, onStop){
-      el.style.position = 'absolute';
-      el.addEventListener('mousedown', md);
-      function md(e){
-        // allow editing text without moving when selection inside contentEditable
-        if(e.target !== el && e.target.isContentEditable) return;
-        e.preventDefault();
-        const startX = e.clientX; const startY = e.clientY;
-        const origLeft = parseFloat(el.style.left || 0); const origTop = parseFloat(el.style.top || 0);
-        function mm(ev){ const dx = ev.clientX - startX; const dy = ev.clientY - startY; el.style.left = (origLeft + dx) + 'px'; el.style.top = (origTop + dy) + 'px'; }
-        function mu(ev){ window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); onStop(parseFloat(el.style.left), parseFloat(el.style.top)); }
-        window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu);
-      }
-    }
-
-    // Add text box action
-    document.querySelector('.tool-btn[data-tool="text"]').addEventListener('click', ()=>{
-      const p = state.currentPage;
-      const tb = { id: uid(), page: p, x: 40, y: 40, width: 180, fontSize: parseInt($('fontSize').value||18), fontFamily: $('fontFamily').value, bold: $('fontBold').checked, italic: $('fontItalic').checked, color: $('fontColor').value, text: 'New text', z: (state.textBoxes.length?Math.max(...state.textBoxes.map(t=>t.z)):0)+1 };
-      state.textBoxes.push(tb); pushHistory({type:'addText', payload:tb}); renderCanvasArea();
-    });
-
-    // Layering actions
-    $('bringForwardBtn').addEventListener('click', ()=>{ if(!state.selectedBoxId) return; const tb = state.textBoxes.find(t=>t.id===state.selectedBoxId); if(!tb) return; tb.z = Math.max(...state.textBoxes.map(t=>t.z))+1; renderCanvasArea(); });
-    $('sendBackwardBtn').addEventListener('click', ()=>{ if(!state.selectedBoxId) return; const tb = state.textBoxes.find(t=>t.id===state.selectedBoxId); if(!tb) return; tb.z = Math.min(...state.textBoxes.map(t=>t.z))-1; renderCanvasArea(); });
-
-    function selectBox(id){ state.selectedBoxId = id;
-      document.querySelectorAll('.text-box').forEach(el=> el.style.border = (el.dataset.tid==id?'2px solid #2563eb':'1px dashed #999'));
-    }
-
-    // Undo/Redo (simple stack-based)
-    function pushHistory(action){ state.history.push(action); state.future = []; }
-    $('undoBtn').addEventListener('click', ()=>{ const act = state.history.pop(); if(!act) return; state.future.unshift(act); undoAction(act); renderCanvasArea(); });
-    $('redoBtn').addEventListener('click', ()=>{ const act = state.future.shift(); if(!act) return; state.history.push(act); redoAction(act); renderCanvasArea(); });
-
-    function undoAction(a){ if(!a) return; if(a.type==='addText') state.textBoxes = state.textBoxes.filter(t=>t.id!==a.payload.id); if(a.type==='addRedact') state.redactions = state.redactions.filter(r=>r.id!==a.payload.id); if(a.type==='delRedact') state.redactions.push(a.payload); if(a.type==='load'){ state.textBoxes=[]; state.redactions=[]; } }
-    function redoAction(a){ if(!a) return; if(a.type==='addText') state.textBoxes.push(a.payload); if(a.type==='addRedact') state.redactions.push(a.payload); if(a.type==='delRedact') state.redactions = state.redactions.filter(r=>r.id!==a.payload.id); }
-
-    // Export using pdf-lib: draw all text and redactions onto original PDF bytes and download
-    $('exportBtn').addEventListener('click', async ()=>{
-      if(!state.pdfBytes) return alert('Please load a PDF first.');
-      const { PDFDocument, rgb, StandardFonts } = PDFLib;
-      const pdfDoc = await PDFDocument.load(state.pdfBytes);
-      const helv = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      for(const tb of state.textBoxes){
-        const page = pdfDoc.getPage(tb.page-1);
-        const { height } = page.getSize();
-        const x = tb.x;
-        const y = height - tb.y - tb.fontSize;
-        page.drawText(tb.text || '', { x, y, size: tb.fontSize, font: helv, color: hexToRgbNorm(tb.color) });
-      }
-      for(const r of state.redactions){
-        const page = pdfDoc.getPage(r.page-1);
-        const { height } = page.getSize();
-        const x = r.x;
-        const y = height - r.y - r.h;
-        page.drawRectangle({ x, y, width: r.w, height: r.h, color: rgb(0,0,0) });
-      }
-      const out = await pdfDoc.save();
-      const blob = new Blob([out], {type:'application/pdf'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='edited.pdf'; a.click(); URL.revokeObjectURL(url);
-    });
-
-    function hexToRgbNorm(hex){ const h = hex.replace('#',''); const bigint = parseInt(h,16); const r=(bigint>>16)&255; const g=(bigint>>8)&255; const b=bigint&255; return { r:r/255, g:g/255, b:b/255 }; }
-
-    // Save/Load workspace
-    $('saveWs').addEventListener('click', ()=>{ const ws = {textBoxes:state.textBoxes, redactions:state.redactions}; localStorage.setItem('pdf-editor-ws', JSON.stringify(ws)); alert('Workspace saved'); });
-    $('loadWs').addEventListener('click', ()=>{ const ws = JSON.parse(localStorage.getItem('pdf-editor-ws')||'null'); if(!ws) return alert('No saved workspace'); state.textBoxes = ws.textBoxes||[]; state.redactions = ws.redactions||[]; renderCanvasArea(); });
-
-    // Accessibility: keyboard handler for delete selected text box
-    window.addEventListener('keydown', (e)=>{ if(e.key === 'Delete' && state.selectedBoxId){ state.textBoxes = state.textBoxes.filter(t=>t.id!==state.selectedBoxId); state.selectedBoxId = null; renderCanvasArea(); } });
-
-    // Initial empty render
-    renderCanvasArea();
-  </script>
+    </script>
 </body>
 </html>
