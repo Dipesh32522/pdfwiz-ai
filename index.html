@@ -1,21 +1,29 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>All-in-One Online Tools</title>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans"><header class="bg-green-500 text-white p-6 text-center">
+<body class="bg-gray-100 font-sans">
+
+<header class="bg-green-500 text-white p-6 text-center">
   <h1 class="text-3xl font-bold">All-in-One Online Tools</h1>
   <p class="mt-2">PDF Editor | Loan Calculator | Rent vs Buy Calculator</p>
-</header><nav class="flex justify-center gap-4 mt-4">
+</header>
+
+<nav class="flex justify-center gap-4 mt-4">
   <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('pdf')">PDF Editor</button>
   <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('loan')">Loan Calculator</button>
   <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('rent')">Rent vs Buy Calculator</button>
-</nav><section id="pdf" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
+</nav>
+
+<!-- PDF Editor -->
+<section id="pdf" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
   <h2 class="text-2xl font-bold mb-4">PDF Editor</h2>
   <input type="file" id="pdfFile" accept="application/pdf" class="mb-4 p-2 border rounded w-full">
   <canvas id="pdfCanvas" class="border rounded w-full"></canvas>
@@ -23,7 +31,10 @@
     <button id="addTextBtn" class="px-4 py-2 bg-blue-500 text-white rounded">Add Text</button>
     <button id="downloadPDFBtn" class="px-4 py-2 bg-green-500 text-white rounded">Download PDF</button>
   </div>
-</section><section id="loan" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
+</section>
+
+<!-- Loan Calculator -->
+<section id="loan" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
   <h2 class="text-2xl font-bold mb-4">Loan / EMI Calculator</h2>
   <div class="grid gap-4">
     <input type="number" id="loanAmount" placeholder="Loan Amount" class="p-2 border rounded">
@@ -33,7 +44,10 @@
     <div id="emiResult" class="font-bold mt-2"></div>
     <canvas id="emiChart" class="mt-4"></canvas>
   </div>
-</section><section id="rent" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
+</section>
+
+<!-- Rent vs Buy Calculator -->
+<section id="rent" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
   <h2 class="text-2xl font-bold mb-4">Rent vs Buy Calculator</h2>
   <div class="grid gap-4">
     <input type="number" id="rentAmount" placeholder="Monthly Rent" class="p-2 border rounded">
@@ -43,96 +57,131 @@
     <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="calculateRentVsBuy()">Calculate</button>
     <div id="rentResult" class="font-bold mt-2 whitespace-pre-line"></div>
   </div>
-</section><script>
-// Section switch
-function showSection(id){
-  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
+</section>
+
+<script>
+// Set PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+// Section toggle
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 showSection('pdf');
 
-// ------------------- PDF Editor -------------------
+// ---- PDF Editor ----
 let pdfDoc = null;
 let pdfCanvas = document.getElementById('pdfCanvas');
 let ctx = pdfCanvas.getContext('2d');
 let currentPage = 1;
 
-document.getElementById('pdfFile').addEventListener('change', async function(e){
+document.getElementById('pdfFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  if(file){
+  if (file) {
     const arrayBuffer = await file.arrayBuffer();
     pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
     renderPage(currentPage);
   }
 });
 
-async function renderPage(pageNum){
+async function renderPage(pageNum) {
   const page = await pdfDoc.getPage(pageNum);
   const viewport = page.getViewport({ scale: 1.5 });
   pdfCanvas.height = viewport.height;
   pdfCanvas.width = viewport.width;
-  await page.render({canvasContext: ctx, viewport: viewport}).promise;
+  await page.render({ canvasContext: ctx, viewport }).promise;
 }
 
-// Add text overlay
-document.getElementById('addTextBtn').addEventListener('click', function(){
+document.getElementById('addTextBtn').addEventListener('click', () => {
   const text = prompt('Enter text to add:');
-  if(text){
+  if (text) {
     ctx.fillStyle = 'red';
     ctx.font = '20px Arial';
     ctx.fillText(text, 50, 50);
   }
 });
 
-// Download canvas as PDF
-document.getElementById('downloadPDFBtn').addEventListener('click', async function(){
-  const pdfBytes = await PDFLib.PDFDocument.create();
-  const page = pdfBytes.addPage([pdfCanvas.width, pdfCanvas.height]);
-  const pngImage = await pdfBytes.embedPng(pdfCanvas.toDataURL('image/png'));
-  page.drawImage(pngImage, { x: 0, y: 0, width: pdfCanvas.width, height: pdfCanvas.height });
-  const pdfDataUri = await pdfBytes.saveAsBase64({ dataUri: true });
-  const link = document.createElement('a');
-  link.href = pdfDataUri;
-  link.download = 'edited.pdf';
-  link.click();
+document.getElementById('downloadPDFBtn').addEventListener('click', async () => {
+  try {
+    const pdfDocOut = await PDFLib.PDFDocument.create();
+    const page = pdfDocOut.addPage([pdfCanvas.width, pdfCanvas.height]);
+    const pngImage = await pdfDocOut.embedPng(pdfCanvas.toDataURL('image/png'));
+    page.drawImage(pngImage, {
+      x: 0,
+      y: 0,
+      width: pdfCanvas.width,
+      height: pdfCanvas.height
+    });
+    const pdfDataUri = await pdfDocOut.saveAsBase64({ dataUri: true });
+    const link = document.createElement('a');
+    link.href = pdfDataUri;
+    link.download = 'edited.pdf';
+    link.click();
+  } catch (err) {
+    console.error(err);
+    alert('Error generating PDF');
+  }
 });
 
-// ------------------- Loan Calculator -------------------
+// ---- Loan Calculator ----
 let emiChart = null;
-function calculateEMI(){
+function calculateEMI() {
   const P = parseFloat(document.getElementById('loanAmount').value);
-  const r = parseFloat(document.getElementById('loanRate').value)/12/100;
-  const n = parseFloat(document.getElementById('loanYears').value)*12;
-  const EMI = (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
-  if(!isNaN(EMI)){
-    document.getElementById('emiResult').innerText = 'Monthly EMI: ₹'+EMI.toFixed(2);
+  const r = parseFloat(document.getElementById('loanRate').value) / 12 / 100;
+  const n = parseFloat(document.getElementById('loanYears').value) * 12;
+
+  const EMI = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+
+  if (!isNaN(EMI)) {
+    document.getElementById('emiResult').innerText =
+      'Monthly EMI: ₹' + EMI.toFixed(2);
     const ctxChart = document.getElementById('emiChart').getContext('2d');
-    if(emiChart) emiChart.destroy();
+    if (emiChart) emiChart.destroy();
     emiChart = new Chart(ctxChart, {
       type: 'pie',
       data: {
-        labels:['Principal','Interest'],
-        datasets:[{data:[P, EMI*n - P], backgroundColor:['#4CAF50','#F87171']}]
+        labels: ['Principal', 'Interest'],
+        datasets: [
+          {
+            data: [P, EMI * n - P],
+            backgroundColor: ['#4CAF50', '#F87171']
+          }
+        ]
       }
     });
-  } else document.getElementById('emiResult').innerText = 'Please enter valid values!';
+  } else {
+    document.getElementById('emiResult').innerText =
+      'Please enter valid values!';
+  }
 }
 
-// ------------------- Rent vs Buy Calculator -------------------
-function calculateRentVsBuy(){
-  const rent = parseFloat(document.getElementById('rentAmount').value)*12;
+// ---- Rent vs Buy Calculator ----
+function calculateRentVsBuy() {
+  const rent = parseFloat(document.getElementById('rentAmount').value) * 12;
   const price = parseFloat(document.getElementById('homePrice').value);
-  const r = parseFloat(document.getElementById('mortgageRate').value)/12/100;
-  const n = parseFloat(document.getElementById('mortgageYears').value)*12;
-  const EMI = (price*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
-  const totalBuy = EMI*parseFloat(document.getElementById('mortgageYears').value)*12;
-  if(!isNaN(totalBuy)){
-    let advice = totalBuy>rent*parseFloat(document.getElementById('mortgageYears').value) ? 'Renting may be better' : 'Buying may be better';
-    document.getElementById('rentResult').innerText = 
-      'Total Cost of Buying: ₹'+totalBuy.toFixed(2)+'\n'+
-      'Total Rent Paid: ₹'+(rent*parseFloat(document.getElementById('mortgageYears').value)).toFixed(2)+'\n'+
-      'Advice: '+advice;
-  } else document.getElementById('rentResult').innerText = 'Please enter valid values!';
+  const r = parseFloat(document.getElementById('mortgageRate').value) / 12 / 100;
+  const n = parseFloat(document.getElementById('mortgageYears').value) * 12;
+
+  const EMI = (price * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  const totalBuy = EMI * parseFloat(document.getElementById('mortgageYears').value) * 12;
+
+  if (!isNaN(totalBuy)) {
+    let simpleAdvice =
+      totalBuy > rent * parseFloat(document.getElementById('mortgageYears').value)
+        ? 'Renting may be cheaper in this simple model'
+        : 'Buying may be cheaper in this simple model';
+    document.getElementById('rentResult').innerText =
+      'Total Cost of Buying: ₹' + totalBuy.toFixed(2) + '\n' +
+      'Total Rent Paid: ₹' + (rent * parseFloat(document.getElementById('mortgageYears').value)).toFixed(2) + '\n' +
+      'Note: ignores taxes, insurance, maintenance, appreciation, rent growth, and opportunity cost.\n' +
+      'Result: ' + simpleAdvice;
+  } else {
+    document.getElementById('rentResult').innerText =
+      'Please enter valid values!';
+  }
 }
-</script></body>
+</script>
+</body>
 </html>
