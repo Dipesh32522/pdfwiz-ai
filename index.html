@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>All-in-One Online Tools</title>
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -13,28 +11,16 @@
 
 <header class="bg-green-500 text-white p-6 text-center">
   <h1 class="text-3xl font-bold">All-in-One Online Tools</h1>
-  <p class="mt-2">PDF Editor | Loan Calculator | Rent vs Buy Calculator</p>
+  <p class="mt-2">Loan Calculator | Rent vs Buy Calculator</p>
 </header>
 
 <nav class="flex justify-center gap-4 mt-4">
-  <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('pdf')">PDF Editor</button>
   <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('loan')">Loan Calculator</button>
   <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="showSection('rent')">Rent vs Buy Calculator</button>
 </nav>
 
-<!-- PDF Editor -->
-<section id="pdf" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
-  <h2 class="text-2xl font-bold mb-4">PDF Editor</h2>
-  <input type="file" id="pdfFile" accept="application/pdf" class="mb-4 p-2 border rounded w-full">
-  <canvas id="pdfCanvas" class="border rounded w-full"></canvas>
-  <div class="mt-4 flex gap-2">
-    <button id="addTextBtn" class="px-4 py-2 bg-blue-500 text-white rounded">Add Text</button>
-    <button id="downloadPDFBtn" class="px-4 py-2 bg-green-500 text-white rounded">Download PDF</button>
-  </div>
-</section>
-
 <!-- Loan Calculator -->
-<section id="loan" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
+<section id="loan" class="bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
   <h2 class="text-2xl font-bold mb-4">Loan / EMI Calculator</h2>
   <div class="grid gap-4">
     <input type="number" id="loanAmount" placeholder="Loan Amount" class="p-2 border rounded">
@@ -60,70 +46,12 @@
 </section>
 
 <script>
-// Setup PDF.js worker (optional but recommended)
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
 // Section switch functionality
 function showSection(id){
   document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
-showSection('pdf');
-
-// ------------------- PDF Editor -------------------
-let pdfDoc = null;
-let pdfCanvas = document.getElementById('pdfCanvas');
-let ctx = pdfCanvas.getContext('2d');
-let currentPage = 1;
-
-document.getElementById('pdfFile').addEventListener('change', async function(e){
-  const file = e.target.files[0];
-  if(file){
-    const arrayBuffer = await file.arrayBuffer();
-    pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
-    renderPage(currentPage);
-  }
-});
-
-async function renderPage(pageNum){
-  const page = await pdfDoc.getPage(pageNum);
-  const viewport = page.getViewport({ scale: 1.5 });
-  pdfCanvas.height = viewport.height;
-  pdfCanvas.width = viewport.width;
-  await page.render({canvasContext: ctx, viewport: viewport}).promise;
-}
-
-// Add text overlay on canvas
-document.getElementById('addTextBtn').addEventListener('click', function(){
-  const text = prompt('Enter text to add:');
-  if(text){
-    ctx.fillStyle = 'red';
-    ctx.font = '20px Arial';
-    ctx.fillText(text, 50, 50);
-  }
-});
-
-// Download canvas as a PDF
-document.getElementById('downloadPDFBtn').addEventListener('click', async function(){
-  try {
-    const pdfDocOut = await PDFLib.PDFDocument.create();
-    const page = pdfDocOut.addPage([pdfCanvas.width, pdfCanvas.height]);
-    const pngImage = await pdfDocOut.embedPng(pdfCanvas.toDataURL('image/png'));
-    page.drawImage(pngImage, { 
-      x: 0, y: 0, 
-      width: pdfCanvas.width, 
-      height: pdfCanvas.height 
-    });
-    const pdfDataUri = await pdfDocOut.saveAsBase64({ dataUri: true });
-    const link = document.createElement('a');
-    link.href = pdfDataUri;
-    link.download = 'edited.pdf';
-    link.click();
-  } catch (err) {
-    console.error(err);
-    alert('Error generating PDF');
-  }
-});
+showSection('loan');
 
 // ------------------- Loan Calculator -------------------
 let emiChart = null;
@@ -131,10 +59,10 @@ function calculateEMI(){
   const P = parseFloat(document.getElementById('loanAmount').value);
   const r = parseFloat(document.getElementById('loanRate').value)/12/100;
   const n = parseFloat(document.getElementById('loanYears').value)*12;
-  
+
   const EMI = (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
-  
-  if(!isNaN(EMI)){
+
+  if(!isNaN(EMI) && isFinite(EMI)){
     document.getElementById('emiResult').innerText = 'Monthly EMI: ₹'+EMI.toFixed(2);
     const ctxChart = document.getElementById('emiChart').getContext('2d');
     if(emiChart) emiChart.destroy();
@@ -147,26 +75,30 @@ function calculateEMI(){
     });
   } else {
     document.getElementById('emiResult').innerText = 'Please enter valid values!';
+    if(emiChart) { emiChart.destroy(); emiChart = null; }
   }
 }
 
 // ------------------- Rent vs Buy Calculator -------------------
 function calculateRentVsBuy(){
-  const rent = parseFloat(document.getElementById('rentAmount').value)*12;
+  const years = parseFloat(document.getElementById('mortgageYears').value);
+  const rentMonthly = parseFloat(document.getElementById('rentAmount').value);
   const price = parseFloat(document.getElementById('homePrice').value);
   const r = parseFloat(document.getElementById('mortgageRate').value)/12/100;
-  const n = parseFloat(document.getElementById('mortgageYears').value)*12;
-  
+  const n = years*12;
+
+  const rentAnnual = rentMonthly*12;
   const EMI = (price*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
-  const totalBuy = EMI*parseFloat(document.getElementById('mortgageYears').value)*12;
-  
-  if(!isNaN(totalBuy)){
-    let simpleAdvice = totalBuy > rent*parseFloat(document.getElementById('mortgageYears').value)
+  const totalBuy = EMI*n;
+
+  if(isFinite(totalBuy)){
+    const totalRent = rentAnnual*years;
+    const simpleAdvice = totalBuy > totalRent
       ? 'Renting may be cheaper in this simple model'
       : 'Buying may be cheaper in this simple model';
-    document.getElementById('rentResult').innerText = 
+    document.getElementById('rentResult').innerText =
       'Total Cost of Buying: ₹'+totalBuy.toFixed(2)+'\n'+
-      'Total Rent Paid: ₹'+(rent*parseFloat(document.getElementById('mortgageYears').value)).toFixed(2)+'\n'+
+      'Total Rent Paid: ₹'+totalRent.toFixed(2)+'\n'+
       'Note: ignores taxes, insurance, maintenance, appreciation, rent growth, and opportunity cost.\n'+
       'Result: '+simpleAdvice;
   } else {
