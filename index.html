@@ -30,4 +30,109 @@
     <input type="number" id="loanRate" placeholder="Interest Rate (%)" class="p-2 border rounded">
     <input type="number" id="loanYears" placeholder="Tenure (Years)" class="p-2 border rounded">
     <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="calculateEMI()">Calculate EMI</button>
-    <div id="emiResult
+    <div id="emiResult" class="font-bold mt-2"></div>
+    <canvas id="emiChart" class="mt-4"></canvas>
+  </div>
+</section><section id="rent" class="hidden bg-white max-w-3xl mx-auto mt-6 p-6 rounded shadow">
+  <h2 class="text-2xl font-bold mb-4">Rent vs Buy Calculator</h2>
+  <div class="grid gap-4">
+    <input type="number" id="rentAmount" placeholder="Monthly Rent" class="p-2 border rounded">
+    <input type="number" id="homePrice" placeholder="Home Price" class="p-2 border rounded">
+    <input type="number" id="mortgageRate" placeholder="Interest Rate (%)" class="p-2 border rounded">
+    <input type="number" id="mortgageYears" placeholder="Loan Term (Years)" class="p-2 border rounded">
+    <button class="px-4 py-2 bg-green-500 text-white rounded" onclick="calculateRentVsBuy()">Calculate</button>
+    <div id="rentResult" class="font-bold mt-2 whitespace-pre-line"></div>
+  </div>
+</section><script>
+// Section switch
+function showSection(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+showSection('pdf');
+
+// ------------------- PDF Editor -------------------
+let pdfDoc = null;
+let pdfCanvas = document.getElementById('pdfCanvas');
+let ctx = pdfCanvas.getContext('2d');
+let currentPage = 1;
+
+document.getElementById('pdfFile').addEventListener('change', async function(e){
+  const file = e.target.files[0];
+  if(file){
+    const arrayBuffer = await file.arrayBuffer();
+    pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
+    renderPage(currentPage);
+  }
+});
+
+async function renderPage(pageNum){
+  const page = await pdfDoc.getPage(pageNum);
+  const viewport = page.getViewport({ scale: 1.5 });
+  pdfCanvas.height = viewport.height;
+  pdfCanvas.width = viewport.width;
+  await page.render({canvasContext: ctx, viewport: viewport}).promise;
+}
+
+// Add text overlay
+document.getElementById('addTextBtn').addEventListener('click', function(){
+  const text = prompt('Enter text to add:');
+  if(text){
+    ctx.fillStyle = 'red';
+    ctx.font = '20px Arial';
+    ctx.fillText(text, 50, 50);
+  }
+});
+
+// Download canvas as PDF
+document.getElementById('downloadPDFBtn').addEventListener('click', async function(){
+  const pdfBytes = await PDFLib.PDFDocument.create();
+  const page = pdfBytes.addPage([pdfCanvas.width, pdfCanvas.height]);
+  const pngImage = await pdfBytes.embedPng(pdfCanvas.toDataURL('image/png'));
+  page.drawImage(pngImage, { x: 0, y: 0, width: pdfCanvas.width, height: pdfCanvas.height });
+  const pdfDataUri = await pdfBytes.saveAsBase64({ dataUri: true });
+  const link = document.createElement('a');
+  link.href = pdfDataUri;
+  link.download = 'edited.pdf';
+  link.click();
+});
+
+// ------------------- Loan Calculator -------------------
+let emiChart = null;
+function calculateEMI(){
+  const P = parseFloat(document.getElementById('loanAmount').value);
+  const r = parseFloat(document.getElementById('loanRate').value)/12/100;
+  const n = parseFloat(document.getElementById('loanYears').value)*12;
+  const EMI = (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+  if(!isNaN(EMI)){
+    document.getElementById('emiResult').innerText = 'Monthly EMI: ₹'+EMI.toFixed(2);
+    const ctxChart = document.getElementById('emiChart').getContext('2d');
+    if(emiChart) emiChart.destroy();
+    emiChart = new Chart(ctxChart, {
+      type: 'pie',
+      data: {
+        labels:['Principal','Interest'],
+        datasets:[{data:[P, EMI*n - P], backgroundColor:['#4CAF50','#F87171']}]
+      }
+    });
+  } else document.getElementById('emiResult').innerText = 'Please enter valid values!';
+}
+
+// ------------------- Rent vs Buy Calculator -------------------
+function calculateRentVsBuy(){
+  const rent = parseFloat(document.getElementById('rentAmount').value)*12;
+  const price = parseFloat(document.getElementById('homePrice').value);
+  const r = parseFloat(document.getElementById('mortgageRate').value)/12/100;
+  const n = parseFloat(document.getElementById('mortgageYears').value)*12;
+  const EMI = (price*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+  const totalBuy = EMI*parseFloat(document.getElementById('mortgageYears').value)*12;
+  if(!isNaN(totalBuy)){
+    let advice = totalBuy>rent*parseFloat(document.getElementById('mortgageYears').value) ? 'Renting may be better' : 'Buying may be better';
+    document.getElementById('rentResult').innerText = 
+      'Total Cost of Buying: ₹'+totalBuy.toFixed(2)+'\n'+
+      'Total Rent Paid: ₹'+(rent*parseFloat(document.getElementById('mortgageYears').value)).toFixed(2)+'\n'+
+      'Advice: '+advice;
+  } else document.getElementById('rentResult').innerText = 'Please enter valid values!';
+}
+</script></body>
+</html>
