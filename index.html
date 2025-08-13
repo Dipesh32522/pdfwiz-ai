@@ -2,137 +2,244 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Speed Test + Calculator Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIP | EMI | GST — Advanced Pro Calculators</title>
 <style>
-body {font-family: Arial, sans-serif; background:#f9f9f9; margin:0; padding:0; color:#333;}
-header {background:#0066cc; color:#fff; padding:15px; text-align:center;}
-nav {background:#004d99; padding:10px; text-align:center;}
-nav a {color:#fff; margin:0 10px; text-decoration:none; font-weight:bold;}
-section {padding:20px;}
-.card {background:#fff; padding:15px; margin:10px auto; max-width:500px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);}
-input, button {padding:8px; margin:5px 0; width:100%;}
-button {background:#0066cc; color:#fff; border:none; cursor:pointer;}
-button:hover {background:#004d99;}
-.result {margin-top:10px; font-weight:bold;}
+:root{
+  --bg:#0e1326; --card:#151c3a; --text:#e9edf6; --muted:#a7b0c6; --accent:#4fb4ff;
+  --ok:#16a34a; --warn:#f59e0b; --bad:#ef4444; --input:#0f1430; --border:#273056;
+}
+[data-theme="light"]{
+  --bg:#f6f8fc; --card:#ffffff; --text:#161a2b; --muted:#556080; --accent:#0b74ff;
+  --ok:#0a8f55; --warn:#b66b00; --bad:#c32133; --input:#f0f3fa; --border:#d7deee;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
+header{position:sticky;top:0;background:linear-gradient(90deg,#101742,#0b2442);padding:14px;border-bottom:1px solid var(--border)}
+[data-theme="light"] header{background:linear-gradient(90deg,#eaf2ff,#e6f5ff)}
+.wrap{max-width:1100px;margin:auto;padding:0 14px}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.nav a{color:var(--text);text-decoration:none;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+main{max-width:1100px;margin:16px auto;padding:0 14px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.col-6{grid-column:span 6}.col-12{grid-column:span 12}
+@media(max-width:900px){.col-6{grid-column:span 12}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+h2{margin:0 0 8px 0;font-size:18px}
+p.sm{margin:6px 0 14px 0;color:var(--muted)}
+label{display:block;margin:8px 0 4px 0;font-size:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1}
+input,select,button{
+  width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);
+  background:var(--input);color:var(--text);font-size:14px
+}
+input:focus,select:focus{border-color:var(--accent);outline:none}
+.btn{background:var(--accent);color:#05223a;border:none;font-weight:600;cursor:pointer}
+.btn.sec{background:transparent;color:var(--text);border:1px solid var(--border)}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.box{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:8px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid var(--border);padding:6px;text-align:right}
+th{text-align:left;background:color-mix(in oklab,var(--accent) 10%,transparent)}
+.result{margin-top:10px;padding:8px;border-radius:8px;background:color-mix(in oklab,var(--accent) 15%,transparent)}
 </style>
 </head>
-<body>
-
+<body data-theme="dark">
 <header>
-  <h1>ऑल-इन-वन टूल्स: इंटरनेट स्पीड टेस्ट + स्मार्ट कैलकुलेटर हब</h1>
+  <div class="wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h1 style="font-size:18px">SIP | EMI | GST — Advanced Pro Calculators</h1>
+      <button class="btn sec" id="themeBtn" style="width:auto">Theme</button>
+    </div>
+    <div class="nav">
+      <a href="#sip">SIP</a><a href="#emi">EMI</a><a href="#gst">GST</a>
+    </div>
+  </div>
 </header>
-<nav>
-  <a href="#speedtest">स्पीड टेस्ट</a>
-  <a href="#calculators">कैलकुलेटर</a>
-</nav>
 
-<section id="speedtest">
-  <div class="card">
-    <h2>इंटरनेट स्पीड टेस्ट + क्वालिटी स्कोर</h2>
-    <p>Mbps के साथ लेटेंसी, जिटर और पैकेट लॉस आकलन करें।</p>
-    <button onclick="startSpeedTest()">टेस्ट शुरू करें</button>
-    <div id="speedResults" class="result"></div>
-  </div>
-</section>
+<main>
+<div class="grid">
 
-<section id="calculators">
-  <div class="card">
-    <h2>EMI कैलकुलेटर</h2>
-    <input type="number" id="loan" placeholder="Loan Amount (₹)">
-    <input type="number" id="rate" placeholder="Annual Interest Rate (%)">
-    <input type="number" id="months" placeholder="Loan Period (months)">
-    <button onclick="calcEMI()">EMI निकालें</button>
-    <div id="emiResult" class="result"></div>
-  </div>
-
-  <div class="card">
-    <h2>SIP कैलकुलेटर</h2>
-    <input type="number" id="sipAmount" placeholder="Monthly Investment (₹)">
-    <input type="number" id="sipRate" placeholder="Annual Return Rate (%)">
-    <input type="number" id="sipYears" placeholder="Investment Period (years)">
-    <button onclick="calcSIP()">SIP निकालें</button>
-    <div id="sipResult" class="result"></div>
-  </div>
-
-  <div class="card">
-    <h2>GST कैलकुलेटर</h2>
-    <input type="number" id="gstAmount" placeholder="Amount (₹)">
-    <input type="number" id="gstRate" placeholder="GST Rate (%)">
-    <select id="gstType">
-      <option value="add">GST जोड़ें</option>
-      <option value="remove">GST निकालें</option>
+<!-- SIP -->
+<section class="card col-6" id="sip">
+<h2>SIP Calculator</h2>
+<p class="sm">M = P × {[(1+i)^n – 1] / i} × (1+i)</p>
+<div class="row">
+  <div><label>Monthly SIP (₹)</label><input type="number" id="sipP" value="5000"></div>
+  <div><label>Annual Return (%)</label><input type="number" id="sipR" value="12" step="0.1"></div>
+</div>
+<div class="row">
+  <div><label>Years</label><input type="number" id="sipY" value="10"></div>
+  <div><label>Months</label><input type="number" id="sipM" value="0"></div>
+</div>
+<div class="row">
+  <div><label>Step‑up % / year</label><input type="number" id="sipStep" value="0"></div>
+  <div><label>Lump-sum (₹)</label><input type="number" id="sipLump" value="0"></div>
+</div>
+<div class="row">
+  <div><label>Inflation %</label><input type="number" id="sipInfl" value="0"></div>
+  <div><label>Compounding</label>
+    <select id="sipComp">
+      <option value="monthly" selected>Monthly</option>
+      <option value="quarterly">Quarterly</option>
+      <option value="yearly">Yearly</option>
     </select>
-    <button onclick="calcGST()">GST कैलकुलेट करें</button>
-    <div id="gstResult" class="result"></div>
   </div>
+</div>
+<div class="row">
+  <button class="btn" id="sipCalc">Calculate</button>
+  <button class="btn sec" id="sipCSV">Export CSV</button>
+</div>
+<div class="kpi">
+  <div class="box"><div>Maturity</div><div id="sipMat">—</div></div>
+  <div class="box"><div>Invested</div><div id="sipInv">—</div></div>
+  <div class="box"><div>Gains</div><div id="sipGain">—</div></div>
+</div>
+<div class="result">Real Value (infl adj): <span id="sipReal">—</span></div>
+<h4>Target → Required SIP</h4>
+<div class="row">
+  <div><label>Target ₹</label><input type="number" id="sipGoal" value="2000000"></div>
+  <div><label>Years</label><input type="number" id="sipGoalY" value="10"></div>
+</div>
+<div class="row"><button class="btn" id="sipReqBtn">Calculate Required</button>
+<span id="sipReq" style="margin:auto 0 auto auto;">—</span></div>
+<table id="sipTable" style="display:none"><thead><tr><th>Year</th><th>Invested</th><th>Value</th><th>Gain</th></tr></thead><tbody></tbody></table>
 </section>
+
+<!-- EMI -->
+<section class="card col-6" id="emi">
+<h2>EMI Calculator</h2>
+<p class="sm">EMI = P × r × (1+r)^n / [(1+r)^n – 1]</p>
+<div class="row">
+  <div><label>Loan ₹</label><input type="number" id="emiP" value="1000000"></div>
+  <div><label>Annual Rate %</label><input type="number" id="emiR" value="9"></div>
+</div>
+<div class="row">
+  <div><label>Months</label><input type="number" id="emiN" value="240"></div>
+  <div><label>Part-prepay ₹</label><input type="number" id="emiPre" value="0"></div>
+</div>
+<div class="row">
+  <div><label>Rec. prepay /yr ₹</label><input type="number" id="emiRec" value="0"></div>
+  <div><label>Rate ↑%/yr</label><input type="number" id="emiRateInc" value="0"></div>
+</div>
+<div class="row">
+  <button class="btn" id="emiCalc">Calculate</button>
+  <button class="btn sec" id="emiCSV">Export CSV</button>
+</div>
+<div class="kpi">
+  <div class="box"><div>EMI</div><div id="emiOut">—</div></div>
+  <div class="box"><div>Total Interest</div><div id="emiInt">—</div></div>
+  <div class="box"><div>Total Payment</div><div id="emiTot">—</div></div>
+</div>
+<table id="emiTable" style="display:none"><thead><tr><th>Month</th><th>EMI</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody></tbody></table>
+</section>
+
+<!-- GST -->
+<section class="card col-12" id="gst">
+<h2>GST Calculator</h2>
+<div class="row">
+  <div><label>Amount ₹</label><input type="number" id="gstAmt" value="1180"></div>
+  <div><label>GST %</label><input type="number" id="gstRate" value="18"></div>
+  <div><label>Mode</label><select id="gstMode"><option value="add">Exclusive→Add</option><option value="remove" selected>Inclusive→Remove</option></select></div>
+  <div><label>Split</label><select id="gstSplit"><option value="cgst">CGST+SGST</option><option value="igst">IGST</option></select></div>
+</div>
+<div class="row">
+  <button class="btn" id="gstCalc">Calculate</button>
+  <button class="btn sec" id="gstReset">Reset</button>
+  <button class="btn sec" id="gstCopy">Copy</button>
+</div>
+<div class="kpi">
+  <div class="box"><div>Base</div><div id="gstBase">—</div></div>
+  <div class="box"><div>GST</div><div id="gstTax">—</div></div>
+  <div class="box"><div>Total</div><div id="gstTotal">—</div></div>
+</div>
+<div class="result" id="gstBreak">CGST: — | SGST: —</div>
+</section>
+
+</div>
+</main>
 
 <script>
-// -------- Speed Test Demo (Ping/Jitter) --------
-function startSpeedTest(){
-  const results = document.getElementById('speedResults');
-  results.innerHTML = "टेस्ट चल रहा है...";
-  let pingTimes = [];
-  let count = 0;
-  let totalPings = 5;
-  const url = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_light_color_92x30dp.png";
-  function ping(){
-    let start = performance.now();
-    fetch(url,{mode:"no-cors",cache:"no-store"})
-      .then(()=>{ 
-        let time = performance.now()-start;
-        pingTimes.push(time);
-        count++;
-        if(count<totalPings){ping();}else{
-          let avg = pingTimes.reduce((a,b)=>a+b)/pingTimes.length;
-          let jitter = pingTimes.map(p=>Math.abs(p-avg)).reduce((a,b)=>a+b)/pingTimes.length;
-          results.innerHTML = 
-            `औसत लेटेंसी: ${avg.toFixed(1)} ms<br>`+
-            `जिटर: ${jitter.toFixed(1)} ms<br>`+
-            `<small>Note: यह डेमो है, असली स्पीड और पैकेट लॉस के लिए बैकएंड सर्वर चाहिए।</small>`;
-        }
-      });
+// Theme toggle
+document.getElementById('themeBtn').onclick=()=>{
+  document.body.dataset.theme = document.body.dataset.theme==='dark'?'light':'dark';
+};
+const fmt=n=>isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:2}):'—';
+const csvDownload=(name,rows)=>{
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name;a.click();
+};
+
+// SIP
+function sipMonthlyRate(r,comp){
+  const R=r/100;
+  if(comp==='monthly') return R/12;
+  if(comp==='quarterly') return Math.pow(1+R,1/4)-1;
+  if(comp==='yearly') return Math.pow(1+R,1/12)-1;
+  return R/12;
+}
+function runSIP(){
+  let P=+sipP.value||0, rate=+sipR.value||0, months=(+sipY.value*12)+(+sipM.value||0),
+      step=+sipStep.value||0, lump=+sipLump.value||0, infl=+sipInfl.value||0, comp=sipComp.value;
+  let i=sipMonthlyRate(rate,comp);
+  let invested=0,value=lump*Math.pow(1+i,months), yearlyRows=[];
+  let curP=P;
+  for(let m=1;m<=months;m++){
+    value=value*(1+i)+curP;
+    invested+=curP;
+    if(m%12===0){ let g=value-invested-lump*Math.pow(1+i,m); yearlyRows.push([m/12, invested+lump, value, value-(invested+lump)]); curP*=(1+step/100);}
   }
-  ping();
+  const gain=value-(invested+lump), real=value/Math.pow(1+infl/100,months/12);
+  sipMat.textContent='₹ '+fmt(value); sipInv.textContent='₹ '+fmt(invested+lump); sipGain.textContent='₹ '+fmt(gain); sipReal.textContent='₹ '+fmt(real);
+  sipTBody.innerHTML=yearlyRows.map(r=>`<tr><td>${r[0]}</td><td>₹ ${fmt(r[1])}</td><td>₹ ${fmt(r[2])}</td><td>₹ ${fmt(r[3])}</td></tr>`).join('');
+  sipTable.style.display='table';
 }
-
-// -------- EMI --------
-function calcEMI(){
-  let P = parseFloat(document.getElementById('loan').value);
-  let r = parseFloat(document.getElementById('rate').value)/100/12;
-  let n = parseInt(document.getElementById('months').value);
-  let emi = P * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
-  document.getElementById('emiResult').innerHTML = isFinite(emi) ? `EMI: ₹${emi.toFixed(2)}` : "सही वैल्यू डालें";
+function sipReqCalc(){
+  let target=+sipGoal.value||0, years=+sipGoalY.value||0, r=+sipR.value||0, comp=sipComp.value;
+  let i=sipMonthlyRate(r,comp), n=years*12; const A=((Math.pow(1+i,n)-1)/i)*(1+i); sipReq.textContent='₹ '+fmt(target/A);
 }
+sipCalc.onclick=runSIP; sipCSV.onclick=()=>{
+  csvDownload('sip.csv',[['Year','Invested','Value','Gain'],...Array.from(sipTBody.querySelectorAll('tr')).map(tr=>
+    Array.from(tr.children).map(td=>td.innerText))]);
+};
+sipReqBtn.onclick=sipReqCalc;
 
-// -------- SIP --------
-function calcSIP(){
-  let P = parseFloat(document.getElementById('sipAmount').value);
-  let r = parseFloat(document.getElementById('sipRate').value)/100/12;
-  let n = parseInt(document.getElementById('sipYears').value)*12;
-  let maturity = P * ((Math.pow(1+r, n) - 1)/r) * (1+r);
-  let invested = P*n;
-  document.getElementById('sipResult').innerHTML = isFinite(maturity) ? 
-    `कुल राशि: ₹${maturity.toFixed(2)}<br>कुल निवेश: ₹${invested.toFixed(2)}<br>मुनाफा: ₹${(maturity-invested).toFixed(2)}`:
-    "सही वैल्यू डालें";
-}
-
-// -------- GST --------
-function calcGST(){
-  let amount = parseFloat(document.getElementById('gstAmount').value);
-  let rate = parseFloat(document.getElementById('gstRate').value)/100;
-  let type = document.getElementById('gstType').value;
-  if(type==="add"){
-    let gst = amount*rate;
-    document.getElementById('gstResult').innerHTML = `कुल: ₹${(amount+gst).toFixed(2)} (GST: ₹${gst.toFixed(2)})`;
-  } else {
-    let base = amount/(1+rate);
-    let gst = amount-base;
-    document.getElementById('gstResult').innerHTML = `बिना GST: ₹${base.toFixed(2)} (GST: ₹${gst.toFixed(2)})`;
+// EMI
+function runEMI(){
+  let P=+emiP.value||0, rate=+emiR.value||0, n=+emiN.value||0, pre=+emiPre.value||0, rec=+emiRec.value||0, rinc=+emiRateInc.value||0;
+  let r=(rate/100)/12, bal=P-pre, emi=bal>0?(bal*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1):0; let rows=[];
+  let totInt=0; for(let m=1;m<=n && bal>0;m++){
+    let int=bal*r, princ=emi-int; bal=Math.max(0,bal-princ); totInt+=int;
+    rows.push([m,emi,int,princ,bal]); if(m%12===0 && rec){ bal=Math.max(0,bal-rec);}
+    if(m%12===0 && rinc){ rate+=rinc; r=(rate/100)/12; emi=(bal*r*Math.pow(1+r,(n-m)))/(Math.pow(1+r,(n-m))-1);}
   }
+  emiOut.textContent='₹ '+fmt(emi); emiInt.textContent='₹ '+fmt(totInt); emiTot.textContent='₹ '+fmt(totInt+P-pre);
+  emiTBody.innerHTML=rows.slice(0,12).map(r=>`<tr><td>${r[0]}</td><td>₹ ${fmt(r[1])}</td><td>₹ ${fmt(r[2])}</td><td>₹ ${fmt(r[3])}</td><td>₹ ${fmt(r[4])}</td></tr>`).join('');
+  emiTable.style.display='table';
 }
+emiCalc.onclick=runEMI; emiCSV.onclick=()=>{
+  csvDownload('emi.csv',[['Month','EMI','Interest','Principal','Balance'],...Array.from(emiTBody.querySelectorAll('tr')).map(tr=>Array.from(tr.children).map(td=>td.innerText))]);
+};
+
+// GST
+function runGST(){
+  let amt=+gstAmt.value||0, rate=+gstRate.value||0, mode=gstMode.value, split=gstSplit.value;
+  let r=rate/100, base,tax,total;
+  if(mode==='add'){ base=amt; tax=base*r; total=base+tax;}
+  else { base=amt/(1+r); tax=amt-base; total=amt;}
+  gstBase.textContent='₹ '+fmt(base); gstTax.textContent='₹ '+fmt(tax); gstTotal.textContent='₹ '+fmt(total);
+  gstBreak.textContent= split==='cgst'?`CGST: ₹ ${fmt(tax/2)} | SGST: ₹ ${fmt(tax/2)}`:`IGST: ₹ ${fmt(tax)}`;
+}
+gstCalc.onclick=runGST;
+gstReset.onclick=()=>{gstAmt.value=1180;gstRate.value=18;gstMode.value='remove';gstSplit.value='cgst';runGST();};
+gstCopy.onclick=()=>{
+  navigator.clipboard.writeText(`${gstBase.innerText}\n${gstTax.innerText}\n${gstTotal.innerText}\n${gstBreak.innerText}`);
+};
+
+// Init
+sipTBody=document.querySelector('#sipTable tbody'); sipTable=document.getElementById('sipTable'); emiTBody=document.querySelector('#emiTable tbody'); emiTable=document.getElementById('emiTable');
+runSIP(); sipReqCalc(); runEMI(); runGST();
 </script>
-
 </body>
 </html>
