@@ -3,189 +3,265 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced Financial Calculator</title>
+<title>Advanced Financial & Conversion Tools</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  html, body { scroll-behavior: smooth; }
+  .btn { @apply px-4 py-2 rounded font-semibold; }
+  .btn-primary { @apply bg-green-600 text-white hover:bg-green-700; }
+  .input { @apply p-2 border rounded w-full; }
+  .tab { @apply px-4 py-2 border-b-2 cursor-pointer; }
+  .tab.active { @apply border-green-600 text-green-600 font-semibold; }
+</style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body class="bg-gray-50 text-gray-800">
 
-<header class="bg-gradient-to-r from-green-600 to-emerald-500 text-white py-6 shadow">
-  <div class="max-w-4xl mx-auto text-center">
-    <h1 class="text-3xl font-bold">Advanced Financial Calculator</h1>
-    <p class="mt-1 text-lg text-green-100">EMI Calculator • Rent vs Buy Analysis</p>
-  </div>
+<header class="bg-gradient-to-r from-green-600 to-emerald-500 text-white py-6 text-center shadow">
+  <h1 class="text-3xl font-bold">Advanced Financial & Conversion Tools</h1>
 </header>
 
-<main class="max-w-4xl mx-auto p-6">
-  <!-- Navigation Tabs -->
-  <div class="flex border-b mb-6">
-    <button onclick="showSection('loan')" id="tab-loan" class="tab-btn border-b-2 border-green-500 px-4 py-2 text-green-600 font-semibold">Loan Calculator</button>
-    <button onclick="showSection('rent')" id="tab-rent" class="tab-btn px-4 py-2 text-gray-600 hover:text-green-600">Rent vs Buy</button>
+<main class="max-w-5xl mx-auto p-4">
+  <!-- Tabs -->
+  <div class="flex flex-wrap border-b">
+    <button id="tab-loan" class="tab active" onclick="showSection('loan')">Loan/EMI</button>
+    <button id="tab-rent" class="tab" onclick="showSection('rent')">Rent vs Buy</button>
+    <button id="tab-sip" class="tab" onclick="showSection('sip')">SIP Calculator</button>
+    <button id="tab-gst" class="tab" onclick="showSection('gst')">GST Calculator</button>
+    <button id="tab-ci" class="tab" onclick="showSection('ci')">Compound Interest</button>
+    <button id="tab-curr" class="tab" onclick="showSection('curr')">Currency Converter</button>
+    <button id="tab-unit" class="tab" onclick="showSection('unit')">Unit Converter</button>
   </div>
 
-  <!-- Loan Calculator -->
-  <section id="loan" class="bg-white rounded-xl shadow-lg p-6">
+  <!-- Loan/EMI -->
+  <section id="loan" class="bg-white rounded-lg shadow p-4 mt-4">
     <h2 class="text-xl font-bold mb-4">Loan / EMI Calculator</h2>
     <div class="grid md:grid-cols-3 gap-4">
-      <input type="number" id="loanAmount" placeholder="Loan Amount (₹)" class="input">
-      <input type="number" id="loanRate" placeholder="Interest Rate (%)" step="0.01" class="input">
-      <input type="number" id="loanYears" placeholder="Tenure (Years)" class="input">
+      <input id="loanAmount" type="number" placeholder="Loan Amount (₹)" class="input">
+      <input id="loanRate" type="number" placeholder="Interest Rate (%)" step="0.01" class="input">
+      <input id="loanYears" type="number" placeholder="Tenure (Years)" class="input">
     </div>
-    <button onclick="calculateEMI()" class="mt-4 w-full md:w-auto btn-primary">Calculate EMI</button>
-    
-    <div id="emiDetails" class="mt-6 hidden">
-      <p class="font-semibold text-lg">Monthly EMI: <span id="emiResult" class="text-green-600"></span></p>
+    <button onclick="calculateEMI()" class="btn btn-primary mt-4">Calculate EMI</button>
+    <div id="emiResultBox" class="mt-4 hidden">
+      <p class="font-semibold">Monthly EMI: <span id="emiResult" class="text-green-700"></span></p>
       <p>Total Payment: <span id="totalPayment"></span></p>
       <p>Total Interest: <span id="totalInterest"></span></p>
-      <canvas id="emiChart" class="mt-6"></canvas>
-      <h3 class="mt-6 font-semibold">Amortization Schedule (Yearly)</h3>
-      <table class="mt-2 w-full text-sm border">
-        <thead class="bg-gray-100">
-          <tr><th class="p-2 border">Year</th><th class="p-2 border">Principal Paid</th><th class="p-2 border">Interest Paid</th><th class="p-2 border">Balance</th></tr>
-        </thead>
-        <tbody id="amortTable"></tbody>
-      </table>
+      <canvas id="emiChart" class="mt-4"></canvas>
     </div>
   </section>
 
-  <!-- Rent vs Buy Calculator -->
-  <section id="rent" class="bg-white rounded-xl shadow-lg p-6 hidden">
-    <h2 class="text-xl font-bold mb-4">Rent vs Buy Calculator</h2>
+  <!-- Rent vs Buy -->
+  <section id="rent" class="hidden bg-white rounded-lg shadow p-4 mt-4">
+    <h2 class="text-xl font-bold mb-4">Rent vs Buy</h2>
     <div class="grid md:grid-cols-2 gap-4">
-      <input type="number" id="rentAmount" placeholder="Monthly Rent (₹)" class="input">
-      <input type="number" id="homePrice" placeholder="Home Price (₹)" class="input">
-      <input type="number" id="mortgageRate" placeholder="Loan Interest Rate (%)" step="0.01" class="input">
-      <input type="number" id="mortgageYears" placeholder="Loan Term (Years)" class="input">
-      <input type="number" id="annualRentIncrease" placeholder="Annual Rent Increase (%)" step="0.1" class="input">
-      <input type="number" id="propertyAppreciation" placeholder="Property Appreciation (%)" step="0.1" class="input">
-      <input type="number" id="maintenancePercent" placeholder="Annual Maintenance (% of price)" step="0.1" class="input">
-      <input type="number" id="downPaymentPercent" placeholder="Down Payment (%)" step="0.1" class="input">
+      <input id="rentMonthly" type="number" placeholder="Monthly Rent (₹)" class="input">
+      <input id="homePrice" type="number" placeholder="Home Price (₹)" class="input">
+      <input id="loanRate2" type="number" placeholder="Loan Interest Rate (%)" class="input">
+      <input id="loanYears2" type="number" placeholder="Loan Term (Years)" class="input">
     </div>
-    <button onclick="calculateRentVsBuy()" class="mt-4 w-full md:w-auto btn-primary">Compare</button>
-    
-    <div id="rentBuyResult" class="mt-6 hidden">
-      <p class="font-semibold text-lg">Recommendation: <span id="rbAdvice" class="text-green-600"></span></p>
-      <canvas id="rbChart" class="mt-6"></canvas>
+    <button onclick="calcRentBuy()" class="btn btn-primary mt-4">Compare</button>
+    <div id="rbResultBox" class="mt-4 hidden">
+      <p class="font-semibold">Recommendation: <span id="rbAdvice" class="text-green-700"></span></p>
+      <canvas id="rbChart" class="mt-4"></canvas>
+    </div>
+  </section>
+
+  <!-- SIP Calculator -->
+  <section id="sip" class="hidden bg-white rounded-lg shadow p-4 mt-4">
+    <h2 class="text-xl font-bold mb-4">SIP Calculator</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <input id="sipAmount" type="number" placeholder="Monthly Investment (₹)" class="input">
+      <input id="sipRate" type="number" placeholder="Expected Return (%)" step="0.01" class="input">
+      <input id="sipYears" type="number" placeholder="Duration (Years)" class="input">
+    </div>
+    <button onclick="calcSIP()" class="btn btn-primary mt-4">Calculate SIP</button>
+    <div id="sipResultBox" class="mt-4 hidden">
+      <p>Total Investment: <span id="sipInvested"></span></p>
+      <p>Estimated Returns: <span id="sipReturns"></span></p>
+      <p>Wealth Gain: <span id="sipGain"></span></p>
+      <canvas id="sipChart" class="mt-4"></canvas>
+    </div>
+  </section>
+
+  <!-- GST Calculator -->
+  <section id="gst" class="hidden bg-white rounded-lg shadow p-4 mt-4">
+    <h2 class="text-xl font-bold mb-4">GST Calculator</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <input id="gstAmount" type="number" placeholder="Amount (₹)" class="input">
+      <input id="gstRate" type="number" placeholder="GST Rate (%)" class="input" value="18">
+      <select id="gstMode" class="input">
+        <option value="inclusive">Inclusive</option>
+        <option value="exclusive">Exclusive</option>
+      </select>
+    </div>
+    <button onclick="calcGST()" class="btn btn-primary mt-4">Calculate GST</button>
+    <div id="gstResultBox" class="mt-4 hidden">
+      <p>Base Amount: <span id="gstBase"></span></p>
+      <p>GST: <span id="gstValue"></span></p>
+      <p>Total: <span id="gstTotal"></span></p>
+    </div>
+  </section>
+
+  <!-- Compound Interest -->
+  <section id="ci" class="hidden bg-white rounded-lg shadow p-4 mt-4">
+    <h2 class="text-xl font-bold mb-4">Compound Interest</h2>
+    <div class="grid md:grid-cols-4 gap-4">
+      <input id="ciPrincipal" type="number" placeholder="Principal (₹)" class="input">
+      <input id="ciRate" type="number" placeholder="Rate (%)" class="input">
+      <input id="ciYears" type="number" placeholder="Years" class="input">
+      <input id="ciFreq" type="number" placeholder="Times Compounded/Year" class="input" value="12">
+    </div>
+    <button onclick="calcCI()" class="btn btn-primary mt-4">Calculate</button>
+    <div id="ciResultBox" class="mt-4 hidden">
+      <p>Future Value: <span id="ciFuture"></span></p>
+      <p>Interest Earned: <span id="ciEarned"></span></p>
+    </div>
+  </section>
+
+  <!-- Currency Converter -->
+  <section id="curr" class="hidden bg-white rounded-lg shadow p-4 mt-4">
+    <h2 class="text-xl font-bold mb-4">Currency Converter</h2>
+    <div class="grid md:grid-cols-4 gap-4">
+      <input id="currAmount" type="number" placeholder="Amount" class="input">
+      <select id="currFrom" class="input">
+        <option value="INR">INR</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+      </select>
+      <select id="currTo" class="input">
+        <option value="USD">USD</option>
+        <option value="INR">INR</option>
+        <option value="EUR">EUR</option>
+      </select>
+    </div>
+    <button onclick="convertCurrency()" class="btn btn-primary mt-4">Convert</button>
+    <div id="currResultBox" class="mt-4 hidden">
+      <p>Converted Amount: <span id="currResult"></span></p>
+    </div>
+  </section>
+
+  <!-- Unit Converter -->
+  <section id="unit" class="hidden bg-white rounded-lg shadow p-4 mt-4">
+    <h2 class="text-xl font-bold mb-4">Unit Converter</h2>
+    <div class="grid md:grid-cols-4 gap-4">
+      <input id="unitValue" type="number" placeholder="Value" class="input">
+      <select id="unitFrom" class="input">
+        <option value="m">Meters</option>
+        <option value="km">Kilometers</option>
+        <option value="ft">Feet</option>
+        <option value="mi">Miles</option>
+      </select>
+      <select id="unitTo" class="input">
+        <option value="km">Kilometers</option>
+        <option value="m">Meters</option>
+        <option value="ft">Feet</option>
+        <option value="mi">Miles</option>
+      </select>
+    </div>
+    <button onclick="convertUnit()" class="btn btn-primary mt-4">Convert</button>
+    <div id="unitResultBox" class="mt-4 hidden">
+      <p>Converted Value: <span id="unitResult"></span></p>
     </div>
   </section>
 </main>
 
 <script>
-// Tailwind helpers
-document.querySelectorAll('.input').forEach(el => el.classList.add('p-2','border','rounded','w-full'));
-function setActiveTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('border-green-500','text-green-600','font-semibold');
-    btn.classList.add('text-gray-600');
-  });
-  document.getElementById(`tab-${tab}`).classList.add('border-green-500','text-green-600','font-semibold');
-}
-function showSection(id) {
-  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+function showSection(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(id).classList.remove('hidden');
-  setActiveTab(id);
+  document.getElementById('tab-'+id).classList.add('active');
 }
 
-let emiChartObj = null;
-function calculateEMI() {
-  const P = parseFloat(loanAmount.value);
-  const r = parseFloat(loanRate.value)/12/100;
-  const n = parseFloat(loanYears.value)*12;
-  if(!P || !r || !n) return alert('Please fill in valid values');
-
-  const EMI = (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
-  const totalPayment = EMI * n;
-  const totalInterest = totalPayment - P;
-
-  emiResult.textContent = `₹${EMI.toFixed(2)}`;
-  totalPayment.textContent = `₹${totalPayment.toFixed(2)}`;
-  totalInterest.textContent = `₹${totalInterest.toFixed(2)}`;
-
-  const labels = ['Principal', 'Interest'];
-  const data = [P, totalInterest];
-  const ctx = document.getElementById('emiChart').getContext('2d');
-  if(emiChartObj) emiChartObj.destroy();
-  emiChartObj = new Chart(ctx, {
-    type: 'pie',
-    data: {labels, datasets:[{data, backgroundColor:['#10B981','#F87171']}]}
-  });
-
-  // Amortization schedule
-  const tableBody = document.getElementById('amortTable');
-  tableBody.innerHTML = '';
-  let balance = P;
-  for(let year=1; year<=n/12; year++){
-    let interestYear = 0;
-    let principalYear = 0;
-    for(let m=1; m<=12; m++){
-      const interest = balance * r;
-      const principal = EMI - interest;
-      balance -= principal;
-      interestYear += interest;
-      principalYear += principal;
-    }
-    tableBody.innerHTML += `<tr>
-      <td class="border p-1 text-center">${year}</td>
-      <td class="border p-1 text-right">₹${principalYear.toFixed(0)}</td>
-      <td class="border p-1 text-right">₹${interestYear.toFixed(0)}</td>
-      <td class="border p-1 text-right">₹${Math.max(balance,0).toFixed(0)}</td>
-    </tr>`;
-  }
-
-  document.getElementById('emiDetails').classList.remove('hidden');
+// Loan EMI
+let emiChart=null;
+function calculateEMI(){
+  let P=parseFloat(loanAmount.value), r=parseFloat(loanRate.value)/12/100, n=parseFloat(loanYears.value)*12;
+  if(!P||!r||!n) return alert("Fill all fields");
+  let EMI=(P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+  let total=EMI*n, interest=total-P;
+  emiResult.textContent=`₹${EMI.toFixed(2)}`;
+  totalPayment.textContent=`₹${total.toFixed(2)}`;
+  totalInterest.textContent=`₹${interest.toFixed(2)}`;
+  emiResultBox.classList.remove('hidden');
+  if(emiChart) emiChart.destroy();
+  emiChart=new Chart(emiChart.getContext?emiChart.getContext('2d'):document.getElementById('emiChart').getContext('2d'),{
+    type:'pie',data:{labels:['Principal','Interest'],datasets:[{data:[P,interest],backgroundColor:['#22c55e','#ef4444']}]}});
 }
 
-let rbChartObj = null;
-function calculateRentVsBuy(){
-  const rent = parseFloat(rentAmount.value);
-  const price = parseFloat(homePrice.value);
-  const r = parseFloat(mortgageRate.value)/12/100;
-  const years = parseFloat(mortgageYears.value);
-  const n = years * 12;
-  const rentIncrease = (parseFloat(annualRentIncrease.value)||0)/100;
-  const appreciation = (parseFloat(propertyAppreciation.value)||0)/100;
-  const maintenance = (parseFloat(maintenancePercent.value)||0)/100;
-  const downPaymentPct = (parseFloat(downPaymentPercent.value)||0)/100;
+// Rent vs Buy
+let rbChart=null;
+function calcRentBuy(){
+  let rent=parseFloat(rentMonthly.value)*12, price=parseFloat(homePrice.value), r=parseFloat(loanRate2.value)/12/100, n=parseFloat(loanYears2.value)*12;
+  if(!rent||!price||!r||!n) return alert("Fill all fields");
+  let EMI=(price*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+  let buyCost=EMI*n;
+  let advice=buyCost>rent*loanYears2.value?'Renting may be cheaper':'Buying may be cheaper';
+  rbAdvice.textContent=advice;
+  rbResultBox.classList.remove('hidden');
+  if(rbChart) rbChart.destroy();
+  rbChart=new Chart(document.getElementById('rbChart').getContext('2d'),{
+    type:'bar',data:{labels:['Rent Paid','Buy Cost'],datasets:[{data:[rent*loanYears2.value,buyCost],backgroundColor:['#3b82f6','#f59e0b']}]},options:{scales:{y:{beginAtZero:true}}}});
+}
 
-  if(!rent || !price || !r || !years) return alert("Please fill in required fields");
+// SIP
+let sipChart=null;
+function calcSIP(){
+  let amt=parseFloat(sipAmount.value), rate=parseFloat(sipRate.value)/12/100, months=parseFloat(sipYears.value)*12;
+  if(!amt||!rate||!months) return alert("Fill all fields");
+  let invested=amt*months, future=amt*((Math.pow(1+rate,months)-1)/rate)*(1+rate), gain=future-invested;
+  sipInvested.textContent=`₹${invested.toFixed(2)}`;
+  sipReturns.textContent=`₹${future.toFixed(2)}`;
+  sipGain.textContent=`₹${gain.toFixed(2)}`;
+  sipResultBox.classList.remove('hidden');
+  if(sipChart) sipChart.destroy();
+  sipChart=new Chart(document.getElementById('sipChart').getContext('2d'),{
+    type:'pie',data:{labels:['Invested','Gain'],datasets:[{data:[invested,gain],backgroundColor:['#06b6d4','#f43f5e']}]}});
+}
 
-  const downPayment = price * downPaymentPct;
-  const loanAmount = price - downPayment;
-  const EMI = (loanAmount*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+// GST
+function calcGST(){
+  let amt=parseFloat(gstAmount.value), rate=parseFloat(gstRate.value)/100, mode=gstMode.value;
+  if(!amt||!rate) return alert("Fill fields");
+  let base, gstVal, total;
+  if(mode==='exclusive'){ base=amt; gstVal=amt*rate; total=base+gstVal; }
+  else { total=amt; base=amt/(1+rate); gstVal=total-base; }
+  gstBase.textContent=`₹${base.toFixed(2)}`;
+  gstValue.textContent=`₹${gstVal.toFixed(2)}`;
+  gstTotal.textContent=`₹${total.toFixed(2)}`;
+  gstResultBox.classList.remove('hidden');
+}
 
-  let totalRentPaid = 0;
-  let annualRent = rent*12;
-  for(let i=0;i<years;i++){
-    totalRentPaid += annualRent;
-    annualRent *= (1 + rentIncrease);
-  }
+// Compound Interest
+function calcCI(){
+  let P=parseFloat(ciPrincipal.value), r=parseFloat(ciRate.value)/100, t=parseFloat(ciYears.value), n=parseFloat(ciFreq.value);
+  if(!P||!r||!t||!n) return alert("Fill all fields");
+  let A=P*Math.pow(1+(r/n),n*t), interest=A-P;
+  ciFuture.textContent=`₹${A.toFixed(2)}`;
+  ciEarned.textContent=`₹${interest.toFixed(2)}`;
+  ciResultBox.classList.remove('hidden');
+}
 
-  let totalBuyCost = 0;
-  let balance = loanAmount;
-  for(let i=0;i<years;i++){
-    totalBuyCost += EMI*12;
-    totalBuyCost += price * maintenance;
-    price *= (1+appreciation);
-  }
-  totalBuyCost += downPayment;
+// Currency Converter (offline demo)
+const rates={INR:{USD:0.012,EUR:0.011},USD:{INR:83.0,EUR:0.92},EUR:{INR:90.0,USD:1.09}};
+function convertCurrency(){
+  let amt=parseFloat(currAmount.value), from=currFrom.value, to=currTo.value;
+  if(!amt||from===to) return alert('Enter value and pick different currencies');
+  let val=amt*rates[from][to];
+  currResult.textContent=`${to} ${val.toFixed(2)}`;
+  currResultBox.classList.remove('hidden');
+}
 
-  const advice = totalBuyCost > totalRentPaid ? 'Renting may be cheaper' : 'Buying may be cheaper';
-  rbAdvice.textContent = `${advice} (Difference: ₹${Math.abs(totalBuyCost-totalRentPaid).toFixed(0)})`;
-
-  const ctx = document.getElementById('rbChart').getContext('2d');
-  if(rbChartObj) rbChartObj.destroy();
-  rbChartObj = new Chart(ctx, {
-    type: 'bar',
-    data: {labels:['Total Rent Paid','Total Buy Cost'], datasets:[{data:[totalRentPaid, totalBuyCost], backgroundColor:['#60A5FA','#FBBF24']}]},
-    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-  });
-
-  document.getElementById('rentBuyResult').classList.remove('hidden');
+// Unit Converter (distance)
+const factors={m:1,km:1000,ft:0.3048,mi:1609.34};
+function convertUnit(){
+  let val=parseFloat(unitValue.value), from=unitFrom.value, to=unitTo.value;
+  if(!val||from===to) return alert('Enter value and pick different units');
+  let meters=val*factors[from];
+  let out=meters/factors[to];
+  unitResult.textContent=out.toFixed(4)+' '+to;
+  unitResultBox.classList.remove('hidden');
 }
 </script>
-
-<style>
-.btn-primary { @apply bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700; }
-</style>
 </body>
 </html>
