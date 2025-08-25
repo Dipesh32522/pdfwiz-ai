@@ -1,788 +1,227 @@
-<!-- 
-FinanceTools Pro - Single Page App
-
-Sections:
-1. Header with navigation and theme toggle
-2. Main content area that switches based on #hash
-3. Footer (consistent across all views)
-
-Pages:
-- #home: Hero + Cards
-- #sip: SIP Calculator + Chart + Export
-- #emi: EMI Calculator + Amortization + Chart + Export
-- #gstcalc: GST Calculator + Chart + Export
-- #bill: GST Invoice Generator + Export
-
-Libraries used via CDN:
-- Chart.js v4
-- jsPDF v2 + AutoTable
-- SheetJS (xlsx.full.min.js)
-
-How to add more tools:
-1. Add a new route in hashRouter()
-2. Create an HTML section with matching ID
-3. Implement logic inside the switch-case block
-4. Style accordingly with .card and .input-group classes
-
-Branding:
-Colors: dark bg #0e1326, card #141c45, primary #4fb4ff
-Fonts: Inter/system-ui
-Theme toggle: top-right button
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FinanceTools Pro</title>
-  <meta name="description" content="SIP/EMI/GST calculators with charts and exports. Create professional GST invoices."/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0e1326;
-      --card: #141c45;
-      --text: #ffffff;
-      --primary: #4fb4ff;
-      --border: #2a3a66;
-      --hover: #3a8fd9;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Inflation Calculator 2025 - How Much Food Prices Increased | SmartCalcs</title>
+    <meta name="description" content="Check how much grocery prices have increased in India, USA, UK & Canada. Calculate inflation for milk, eggs, rice, bread & more. Free, accurate & mobile-friendly.">
+    <meta name="keywords" content="inflation calculator, grocery price rise, food inflation, price increase calculator, cost of living, SmartCalcs">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://smartcalcs.in/grocery-inflation-calculator.html">
+    
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:title" content="Grocery Inflation Calculator 2025 - See How Food Prices Increased">
+    <meta property="og:description" content="Calculate grocery price rise in your country. Milk, eggs, rice, bread & more.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://smartcalcs.in/grocery-inflation-calculator.html">
+    <meta property="og:image" content="https://smartcalcs.in/assets/og-grocery-inflation.jpg">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Grocery Inflation Calculator 2025">
+    <meta name="twitter:description" content="See how much your grocery bill has increased in the last year.">
+    <meta name="twitter:image" content="https://smartcalcs.in/assets/og-grocery-inflation.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
-    [data-theme="light"] {
-      --bg: #f5f7fa;
-      --card: #ffffff;
-      --text: #111827;
-      --border: #d1d5db;
-      --hover: #2563eb;
-    }
+    <!-- Preload Critical Assets -->
+    <link rel="preload" href="/css/style.css" as="style">
+    <link rel="preload" href="/js/analytics.js" as="script">
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <!-- Google Analytics -->
+    <script src="/js/analytics.js" async></script>
 
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      background: var(--card);
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      z-index: 100;
-    }
-
-    nav a {
-      margin: 0 1rem;
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    nav a:hover {
-      text-decoration: underline;
-    }
-
-    button {
-      background: var(--primary);
-      color: #000;
-      border: none;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      border-radius: 4px;
-      font-weight: 600;
-    }
-
-    button:hover {
-      background: var(--hover);
-    }
-
-    .ghost {
-      background: transparent;
-      border: 1px solid var(--primary);
-      color: var(--primary);
-    }
-
-    main {
-      padding: 2rem 1rem;
-      max-width: 1200px;
-      margin: auto;
-    }
-
-    h1, h2, h3 {
-      margin-bottom: 1rem;
-    }
-
-    .hero {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .hero p {
-      font-size: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .card {
-      background: var(--card);
-      padding: 1.5rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      transition: transform 0.2s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-    }
-
-    .card a {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .input-group {
-      margin-bottom: 1rem;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 0.3rem;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 0.5rem;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 4px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
-    th, td {
-      padding: 0.75rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      background: var(--card);
-      position: sticky;
-      top: 0;
-    }
-
-    canvas {
-      margin-top: 1rem;
-      max-width: 100%;
-    }
-
-    footer {
-      text-align: center;
-      padding: 2rem 1rem;
-      border-top: 1px solid var(--border);
-      color: #aaa;
-    }
-
-    @media (max-width: 600px) {
-      nav a {
-        display: block;
-        margin: 0.5rem 0;
-      }
-    }
-  </style>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        select, button {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #27ae60;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #219653;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-left: 4px solid #27ae60;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .note {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Grocery Price Inflation Calculator 2025</h1>
+        <p>See how much the price of everyday grocery items has increased in your country. Perfect for budgeting, understanding cost of living changes, and financial planning.</p>
 
-<header>
-  <h2>FinanceTools Pro</h2>
-  <nav>
-    <a href="#home">Home</a>
-    <a href="#sip">SIP</a>
-    <a href="#emi">EMI</a>
-    <a href="#gstcalc">GST Calc</a>
-    <a href="#bill">Invoice</a>
-    <button id="themeToggle" class="ghost">☀️ Light Mode</button>
-  </nav>
-</header>
+        <div class="form-group">
+            <label for="country">Select Your Country:</label>
+            <select id="country">
+                <option value="india">India</option>
+                <option value="usa">USA</option>
+                <option value="uk">United Kingdom</option>
+                <option value="canada">Canada</option>
+            </select>
+        </div>
 
-<main id="mainContent"></main>
+        <div class="form-group">
+            <label for="item">Select Grocery Item:</label>
+            <select id="item">
+                <option value="milk">Milk (1 Liter)</option>
+                <option value="eggs">Eggs (12)</option>
+                <option value="rice">Rice (1 kg)</option>
+                <option value="bread">Bread (1 loaf)</option>
+                <option value="potatoes">Potatoes (1 kg)</option>
+                <option value="onions">Onions (1 kg)</option>
+            </select>
+        </div>
 
-<footer>
-  <p>FinanceTools Pro &copy; 2025 | Automate finance tasks with ease.</p>
-</footer>
+        <button onclick="calculateInflation()">Calculate Price Rise</button>
 
-<!-- CDN Libraries -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.full.min.js"></script>
+        <div id="result" class="result" style="display: none;"></div>
 
-<script>
-  const { jsPDF } = window.jspdf;
+        <p class="note">
+            Data based on official inflation reports (2023-2025). Prices are approximate average retail prices.
+        </p>
+    </div>
 
-  // Theme Toggle
-  document.getElementById('themeToggle').addEventListener('click', () => {
-    const root = document.documentElement;
-    const isLight = root.getAttribute('data-theme') === 'light';
-    root.setAttribute('data-theme', isLight ? 'dark' : 'light');
-    document.getElementById('themeToggle').textContent = isLight ? '☀️ Light Mode' : '🌙 Dark Mode';
-  });
+    <footer>
+        <p>© 2025 <a href="https://smartcalcs.in">SmartCalcs.in</a> – Free Online Calculators for Everyone.</p>
+        <p><a href="https://smartcalcs.in">Back to Home</a></p>
+    </footer>
 
-  // Router
-  function hashRouter() {
-    const hash = window.location.hash || '#home';
-    let content = '';
+    <script>
+        // Grocery Inflation Data (Average % Increase 2023-2025)
+        const inflationData = {
+            india: {
+                milk: 18,
+                eggs: 22,
+                rice: 15,
+                bread: 17,
+                potatoes: 30,
+                onions: 45
+            },
+            usa: {
+                milk: 12,
+                eggs: 28,
+                rice: 8,
+                bread: 10,
+                potatoes: 14,
+                onions: 11
+            },
+            uk: {
+                milk: 16,
+                eggs: 24,
+                rice: 13,
+                bread: 19,
+                potatoes: 10,
+                onions: 15
+            },
+            canada: {
+                milk: 14,
+                eggs: 21,
+                rice: 9,
+                bread: 12,
+                potatoes: 13,
+                onions: 16
+            }
+        };
 
-    switch(hash) {
-      case '#home':
-        content = `
-          <section class="hero">
-            <h1>Automate finance tasks. Publish professional GST invoices.</h1>
-            <p>SIP/EMI/GST calculators with charts and exports, plus a ready-to-send GST invoice maker with templates.</p>
-            <button onclick="location.hash='#bill'">Create Invoice</button>
-            <button class="ghost" onclick="location.hash='#sip'">Try SIP Calculator</button>
-          </section>
-          <div class="cards">
-            <div class="card"><a href="#sip">SIP Calculator</a><p>Plan your SIP investments with maturity projections.</p></div>
-            <div class="card"><a href="#emi">EMI Calculator</a><p>Calculate loan EMI with amortization schedule.</p></div>
-            <div class="card"><a href="#gstcalc">GST Calculator</a><p>Add/remove GST from amounts with CGST/SGST.</p></div>
-            <div class="card"><a href="#bill">GST Invoice</a><p>Create and export professional invoices.</p></div>
-          </div>
-        `;
-        break;
-      case '#sip':
-        content = `<div id="sipPage">${sipPage()}</div>`;
-        break;
-      case '#emi':
-        content = `<div id="emiPage">${emiPage()}</div>`;
-        break;
-      case '#gstcalc':
-        content = `<div id="gstCalcPage">${gstCalcPage()}</div>`;
-        break;
-      case '#bill':
-        content = `<div id="billPage">${billPage()}</div>`;
-        break;
-      default:
-        content = `<h2>Page not found</h2>`;
+        function calculateInflation() {
+            const country = document.getElementById('country').value;
+            const item = document.getElementById('item').value;
+            const resultDiv = document.getElementById('result');
+
+            const inflationRate = inflationData[country][item];
+            const itemName = document.getElementById('item').options[document.getElementById('item').selectedIndex].text;
+
+            let message = `In ${country.toUpperCase()}, the price of ${itemName} has increased by <strong>${inflationRate}%</strong> from 2023 to 2025.`;
+
+            if (inflationRate > 20) {
+                message += " This is a significant increase. Consider adjusting your monthly budget.";
+            } else if (inflationRate > 10) {
+                message += " This is a moderate increase. Keep an eye on future price changes.";
+            } else {
+                message += " This is a relatively stable price change.";
+            }
+
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+
+    <!-- Structured Data for Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Grocery Inflation Calculator",
+      "description": "Calculate how much grocery prices have increased in India, USA, UK, and Canada from 2023 to 2025.",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "SmartCalcs",
+        "url": "https://smartcalcs.in"
+      },
+      "url": "https://smartcalcs.in/grocery-inflation-calculator.html"
     }
-
-    document.getElementById('mainContent').innerHTML = content;
-    if (hash === '#sip') initSIP();
-    if (hash === '#emi') initEMI();
-    if (hash === '#gstcalc') initGSTCalc();
-    if (hash === '#bill') initBill();
-  }
-
-  window.addEventListener('hashchange', hashRouter);
-  window.addEventListener('DOMContentLoaded', hashRouter);
-
-  // -------------------------- SIP CALCULATOR --------------------------
-  function sipPage() {
-    return `
-      <h2>SIP Calculator</h2>
-      <div class="input-group">
-        <label>Monthly Investment (₹)</label>
-        <input type="number" id="sipMonthly" placeholder="5000">
-      </div>
-      <div class="input-group">
-        <label>Annual Return (%)</label>
-        <input type="number" id="sipReturn" placeholder="12">
-      </div>
-      <div class="input-group">
-        <label>Years</label>
-        <input type="number" id="sipYears" placeholder="10">
-      </div>
-      <div class="input-group">
-        <label>Goal (₹)</label>
-        <input type="number" id="sipGoal" placeholder="1000000">
-      </div>
-      <button onclick="calculateSIP()">Calculate</button>
-      <div id="sipResult"></div>
-      <canvas id="sipChart"></canvas>
-      <button onclick="exportSIP('pdf')">Export PDF</button>
-      <button onclick="exportSIP('excel')">Export Excel</button>
-      <div id="sipTable"></div>
-    `;
-  }
-
-  function calculateSIP() {
-    const monthly = parseFloat(document.getElementById('sipMonthly').value) || 0;
-    const rate = parseFloat(document.getElementById('sipReturn').value) || 0;
-    const years = parseFloat(document.getElementById('sipYears').value) || 0;
-    const goal = parseFloat(document.getElementById('sipGoal').value) || 0;
-
-    const r = rate / 12 / 100;
-    const n = years * 12;
-    const maturity = monthly * (Math.pow(1 + r, n) - 1) / r * (1 + r);
-    const invested = monthly * n;
-    const gain = maturity - invested;
-
-    document.getElementById('sipResult').innerHTML = `
-      <p><strong>Maturity:</strong> ₹${maturity.toFixed(2)}</p>
-      <p><strong>Invested:</strong> ₹${invested.toFixed(2)}</p>
-      <p><strong>Gains:</strong> ₹${gain.toFixed(2)}</p>
-    `;
-
-    // Projection Table
-    let tableHTML = `<table><thead><tr><th>Year</th><th>Invested</th><th>Value</th><th>Gain</th></tr></thead><tbody>`;
-    let projInvested = 0;
-    for (let i = 1; i <= years; i++) {
-      projInvested += monthly * 12;
-      const val = monthly * (Math.pow(1 + r, i*12) - 1) / r * (1 + r);
-      const gain = val - projInvested;
-      tableHTML += `<tr><td>${i}</td><td>₹${projInvested.toFixed(2)}</td><td>₹${val.toFixed(2)}</td><td>₹${gain.toFixed(2)}</td></tr>`;
-    }
-    tableHTML += `</tbody></table>`;
-    document.getElementById('sipTable').innerHTML = tableHTML;
-
-    // Chart
-    const ctx = document.getElementById('sipChart').getContext('2d');
-    if (window.sipChart) window.sipChart.destroy();
-    window.sipChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: Array.from({length: years}, (_, i) => i + 1),
-        datasets: [
-          { label: 'Invested', data: Array.from({length: years}, (_, i) => (i+1)*monthly*12), borderColor: '#4fb4ff' },
-          { label: 'Value', data: Array.from({length: years}, (_, i) => {
-            const n = (i+1)*12;
-            return monthly * (Math.pow(1 + r, n) - 1) / r * (1 + r);
-          }), borderColor: '#00ff9d' }
-        ]
-      }
-    });
-  }
-
-  function exportSIP(type) {
-    const table = document.querySelector('#sipTable table');
-    if (!table) return;
-
-    if (type === 'pdf') {
-      const doc = new jsPDF();
-      doc.text("SIP Projection Report", 14, 20);
-      doc.autoTable({ html: table, startY: 30 });
-      doc.save("sip-report.pdf");
-    } else if (type === 'excel') {
-      const ws = XLSX.utils.table_to_sheet(table);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "SIP");
-      XLSX.writeFile(wb, "sip-report.xlsx");
-    }
-  }
-
-  function initSIP() {
-    document.getElementById('sipMonthly').value = '5000';
-    document.getElementById('sipReturn').value = '12';
-    document.getElementById('sipYears').value = '10';
-    document.getElementById('sipGoal').value = '1000000';
-    calculateSIP();
-  }
-
-  // -------------------------- EMI CALCULATOR --------------------------
-  function emiPage() {
-    return `
-      <h2>EMI Calculator</h2>
-      <div class="input-group">
-        <label>Loan Amount (₹)</label>
-        <input type="number" id="loanAmount" placeholder="500000">
-      </div>
-      <div class="input-group">
-        <label>Annual Rate (%)</label>
-        <input type="number" id="annualRate" placeholder="8.5">
-      </div>
-      <div class="input-group">
-        <label>Tenure (Months)</label>
-        <input type="number" id="tenure" placeholder="60">
-      </div>
-      <div class="input-group">
-        <label>Prepayment (₹)</label>
-        <input type="number" id="prepay" placeholder="0">
-      </div>
-      <button onclick="calculateEMI()">Calculate</button>
-      <div id="emiResult"></div>
-      <canvas id="emiChart"></canvas>
-      <button onclick="exportEMI('pdf')">Export PDF</button>
-      <button onclick="exportEMI('excel')">Export Excel</button>
-      <div id="emiTable"></div>
-    `;
-  }
-
-  function calculateEMI() {
-    const P = parseFloat(document.getElementById('loanAmount').value) || 0;
-    const r = parseFloat(document.getElementById('annualRate').value) / 12 / 100 || 0;
-    const n = parseFloat(document.getElementById('tenure').value) || 0;
-    const prepay = parseFloat(document.getElementById('prepay').value) || 0;
-
-    const EMI = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-    const totalPayment = EMI * n;
-    const totalInterest = totalPayment - P;
-
-    document.getElementById('emiResult').innerHTML = `
-      <p><strong>EMI:</strong> ₹${EMI.toFixed(2)}</p>
-      <p><strong>Total Interest:</strong> ₹${totalInterest.toFixed(2)}</p>
-      <p><strong>Total Payment:</strong> ₹${totalPayment.toFixed(2)}</p>
-    `;
-
-    // Amortization Table
-    let balance = P;
-    let tableHTML = `<table><thead><tr><th>Month</th><th>EMI</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody>`;
-    for (let i = 1; i <= n; i++) {
-      const interest = balance * r;
-      let principal = EMI - interest;
-      if (i === 1 && prepay > 0) {
-        principal += prepay;
-        balance -= prepay;
-      }
-      balance -= principal;
-      tableHTML += `<tr><td>${i}</td><td>₹${EMI.toFixed(2)}</td><td>₹${interest.toFixed(2)}</td><td>₹${principal.toFixed(2)}</td><td>₹${Math.max(0, balance).toFixed(2)}</td></tr>`;
-    }
-    tableHTML += `</tbody></table>`;
-    document.getElementById('emiTable').innerHTML = tableHTML;
-
-    // Chart
-    const ctx = document.getElementById('emiChart').getContext('2d');
-    if (window.emiChart) window.emiChart.destroy();
-    const interestData = [];
-    const principalData = [];
-    let bal = P;
-    for (let i = 1; i <= Math.min(24, n); i++) {
-      const int = bal * r;
-      const princ = EMI - int;
-      interestData.push(int);
-      principalData.push(princ);
-      bal -= princ;
-    }
-    window.emiChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: Array.from({length: interestData.length}, (_, i) => i + 1),
-        datasets: [
-          { label: 'Interest', data: interestData, backgroundColor: '#ff4d4d' },
-          { label: 'Principal', data: principalData, backgroundColor: '#4dff88' }
-        ]
-      }
-    });
-  }
-
-  function exportEMI(type) {
-    const table = document.querySelector('#emiTable table');
-    if (!table) return;
-
-    if (type === 'pdf') {
-      const doc = new jsPDF();
-      doc.text("EMI Amortization Report", 14, 20);
-      doc.autoTable({ html: table, startY: 30 });
-      doc.save("emi-report.pdf");
-    } else if (type === 'excel') {
-      const ws = XLSX.utils.table_to_sheet(table);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "EMI");
-      XLSX.writeFile(wb, "emi-report.xlsx");
-    }
-  }
-
-  function initEMI() {
-    document.getElementById('loanAmount').value = '500000';
-    document.getElementById('annualRate').value = '8.5';
-    document.getElementById('tenure').value = '60';
-    calculateEMI();
-  }
-
-  // -------------------------- GST CALCULATOR --------------------------
-  function gstCalcPage() {
-    return `
-      <h2>GST Calculator</h2>
-      <div class="input-group">
-        <label>Amount (₹)</label>
-        <input type="number" id="gstAmount" placeholder="1000">
-      </div>
-      <div class="input-group">
-        <label>GST Rate (%)</label>
-        <input type="number" id="gstRate" placeholder="18">
-      </div>
-      <div class="input-group">
-        <label>Mode</label>
-        <select id="gstMode">
-          <option value="add">Add GST (Exclusive)</option>
-          <option value="remove">Remove GST (Inclusive)</option>
-        </select>
-      </div>
-      <button onclick="calculateGST()">Calculate</button>
-      <div id="gstResult"></div>
-      <canvas id="gstChart"></canvas>
-      <button onclick="exportGST('pdf')">Export PDF</button>
-      <button onclick="exportGST('excel')">Export Excel</button>
-    `;
-  }
-
-  function calculateGST() {
-    const amount = parseFloat(document.getElementById('gstAmount').value) || 0;
-    const rate = parseFloat(document.getElementById('gstRate').value) || 0;
-    const mode = document.getElementById('gstMode').value;
-
-    let base, gst, total;
-    if (mode === 'add') {
-      gst = amount * (rate / 100);
-      total = amount + gst;
-      base = amount;
-    } else {
-      total = amount;
-      gst = amount * (rate / (100 + rate));
-      base = amount - gst;
-    }
-
-    const cgst = gst / 2;
-    const sgst = gst / 2;
-
-    document.getElementById('gstResult').innerHTML = `
-      <p><strong>Base:</strong> ₹${base.toFixed(2)}</p>
-      <p><strong>GST:</strong> ₹${gst.toFixed(2)}</p>
-      <p><strong>Total:</strong> ₹${total.toFixed(2)}</p>
-      <p><strong>CGST:</strong> ₹${cgst.toFixed(2)}</p>
-      <p><strong>SGST:</strong> ₹${sgst.toFixed(2)}</p>
-    `;
-
-    // Chart
-    const ctx = document.getElementById('gstChart').getContext('2d');
-    if (window.gstChart) window.gstChart.destroy();
-    window.gstChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Base', 'GST'],
-        datasets: [{
-          data: [base, gst],
-          backgroundColor: ['#4fb4ff', '#ffcc00']
-        }]
-      }
-    });
-  }
-
-  function exportGST(type) {
-    const result = document.getElementById('gstResult').innerText;
-    if (!result) return;
-
-    if (type === 'pdf') {
-      const doc = new jsPDF();
-      doc.text("GST Calculation Report", 14, 20);
-      doc.text(result, 14, 30);
-      doc.save("gst-report.pdf");
-    } else if (type === 'excel') {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([
-        ['Field', 'Value'],
-        ['Base', document.querySelector('#gstResult strong:nth-child(1) + *').textContent],
-        ['GST', document.querySelector('#gstResult strong:nth-child(2) + *').textContent],
-        ['Total', document.querySelector('#gstResult strong:nth-child(3) + *').textContent],
-        ['CGST', document.querySelector('#gstResult strong:nth-child(4) + *').textContent],
-        ['SGST', document.querySelector('#gstResult strong:nth-child(5) + *').textContent],
-      ]);
-      XLSX.utils.book_append_sheet(wb, ws, "GST");
-      XLSX.writeFile(wb, "gst-report.xlsx");
-    }
-  }
-
-  function initGSTCalc() {
-    document.getElementById('gstAmount').value = '1000';
-    document.getElementById('gstRate').value = '18';
-    calculateGST();
-  }
-
-  // -------------------------- BILL GENERATOR --------------------------
-  function billPage() {
-    let company = JSON.parse(localStorage.getItem('company')) || {};
-    return `
-      <h2>GST Invoice Generator</h2>
-      <h3>Company Details</h3>
-      <div class="input-group">
-        <label>Company Name</label>
-        <input type="text" id="compName" placeholder="Your Company" value="${company.name || ''}">
-      </div>
-      <div class="input-group">
-        <label>Address</label>
-        <input type="text" id="compAddr" placeholder="123 Business St" value="${company.addr || ''}">
-      </div>
-      <div class="input-group">
-        <label>GSTIN</label>
-        <input type="text" id="compGST" placeholder="22AAAAA0000A1Z5" value="${company.gst || ''}">
-      </div>
-      <div class="input-group">
-        <label>Logo (optional)</label>
-        <input type="file" id="logoUpload">
-      </div>
-
-      <h3>Client Details</h3>
-      <div class="input-group">
-        <label>Client Name</label>
-        <input type="text" id="clientName" placeholder="Client Name">
-      </div>
-      <div class="input-group">
-        <label>Address</label>
-        <input type="text" id="clientAddr" placeholder="Client Address">
-      </div>
-      <div class="input-group">
-        <label>GSTIN</label>
-        <input type="text" id="clientGST" placeholder="22BBBBB0000B1Z6">
-      </div>
-
-      <h3>Items</h3>
-      <table id="itemTable">
-        <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>GST%</th><th>Amount</th><th>Tax</th><th>Total</th></tr></thead>
-        <tbody id="itemRows">
-          <tr>
-            <td><input type="text" placeholder="Product" oninput="recalculateBill()"></td>
-            <td><input type="number" placeholder="1" oninput="recalculateBill()"></td>
-            <td><input type="number" placeholder="100" oninput="recalculateBill()"></td>
-            <td><input type="number" placeholder="18" oninput="recalculateBill()"></td>
-            <td>₹0.00</td>
-            <td>₹0.00</td>
-            <td>₹0.00</td>
-          </tr>
-        </tbody>
-      </table>
-      <button onclick="addItemRow()">+ Add Item</button>
-
-      <div id="billTotals" style="margin-top: 1rem;"></div>
-      <div class="input-group">
-        <label>Template</label>
-        <select id="invoiceTemplate">
-          <option value="classic">Classic</option>
-          <option value="modern">Modern</option>
-          <option value="minimal">Minimal</option>
-          <option value="bold">Bold</option>
-          <option value="elegant">Elegant</option>
-        </select>
-      </div>
-      <button onclick="exportBill('pdf')">Export PDF</button>
-      <button onclick="exportBill('excel')">Export Excel</button>
-    `;
-  }
-
-  function addItemRow() {
-    const tbody = document.getElementById('itemRows');
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="text" placeholder="Product" oninput="recalculateBill()"></td>
-      <td><input type="number" placeholder="1" oninput="recalculateBill()"></td>
-      <td><input type="number" placeholder="100" oninput="recalculateBill()"></td>
-      <td><input type="number" placeholder="18" oninput="recalculateBill()"></td>
-      <td>₹0.00</td>
-      <td>₹0.00</td>
-      <td>₹0.00</td>
-    `;
-    tbody.appendChild(tr);
-  }
-
-  function recalculateBill() {
-    const rows = document.querySelectorAll('#itemRows tr');
-    let subtotal = 0, taxTotal = 0;
-
-    rows.forEach(row => {
-      const qty = parseFloat(row.cells[1].querySelector('input').value) || 0;
-      const rate = parseFloat(row.cells[2].querySelector('input').value) || 0;
-      const gst = parseFloat(row.cells[3].querySelector('input').value) || 0;
-
-      const amount = qty * rate;
-      const tax = amount * (gst / 100);
-      const total = amount + tax;
-
-      row.cells[4].textContent = `₹${amount.toFixed(2)}`;
-      row.cells[5].textContent = `₹${tax.toFixed(2)}`;
-      row.cells[6].textContent = `₹${total.toFixed(2)}`;
-
-      subtotal += amount;
-      taxTotal += tax;
-    });
-
-    const grandTotal = subtotal + taxTotal;
-    document.getElementById('billTotals').innerHTML = `
-      <p><strong>Subtotal:</strong> ₹${subtotal.toFixed(2)}</p>
-      <p><strong>Tax (CGST+SGST):</strong> ₹${taxTotal.toFixed(2)}</p>
-      <p><strong>Grand Total:</strong> ₹${grandTotal.toFixed(2)}</p>
-    `;
-  }
-
-  function exportBill(type) {
-    const table = document.getElementById('itemTable');
-    const rows = Array.from(table.querySelectorAll('tbody tr'));
-    const data = [['Item', 'Qty', 'Rate', 'GST %', 'Amount', 'Tax', 'Total']];
-    rows.forEach(row => {
-      const cells = Array.from(row.querySelectorAll('input')).map(i => i.value || '0');
-      const computed = [
-        cells[0],
-        cells[1],
-        cells[2],
-        cells[3],
-        row.cells[4].textContent,
-        row.cells[5].textContent,
-        row.cells[6].textContent
-      ];
-      data.push(computed);
-    });
-
-    const totals = document.getElementById('billTotals').innerText.split('\n');
-    data.push(['', '', '', '', '', 'Grand Total:', totals[2].split(':')[1].trim()]);
-
-    if (type === 'pdf') {
-      const doc = new jsPDF();
-      doc.setFontSize(12);
-      doc.text("Invoice", 14, 20);
-      doc.autoTable({
-        head: [data[0]],
-        body: data.slice(1),
-        startY: 30,
-        theme: 'grid'
-      });
-      doc.save("invoice.pdf");
-    } else if (type === 'excel') {
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Invoice");
-      XLSX.writeFile(wb, "invoice.xlsx");
-    }
-
-    // Save company data
-    const logoFile = document.getElementById('logoUpload').files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      const company = {
-        name: document.getElementById('compName').value,
-        addr: document.getElementById('compAddr').value,
-        gst: document.getElementById('compGST').value,
-        logoBase64: reader.result
-      };
-      localStorage.setItem('company', JSON.stringify(company));
-    };
-    if (logoFile) reader.readAsDataURL(logoFile);
-  }
-
-  function initBill() {
-    document.getElementById('compName').value = 'Your Company';
-    document.getElementById('compAddr').value = '123 Business St';
-    document.getElementById('compGST').value = '22AAAAA0000A1Z5';
-    recalculateBill();
-  }
-</script>
-
+    </script>
 </body>
 </html>
