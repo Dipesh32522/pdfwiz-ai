@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GST Calculator - Instant Tax Calculations | FinanceHub Pro</title>
+    <meta name="description" content="Calculate GST amounts instantly with our professional GST calculator. Support for inclusive/exclusive calculations, all GST rates, and detailed breakdowns for Indian businesses." />
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<script type="module" src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Ffinancehub6748back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.8"></script>
+</head>
+<body class="bg-background">
+    <!-- Navigation Header -->
+    <header class="bg-white shadow-card sticky top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-primary" viewBox="0 0 32 32" fill="currentColor">
+                            <path d="M16 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-13-5z"/>
+                            <path d="M14 14h4v2h-4v4h-2v-4H8v-2h4V8h2v6z" fill="white"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-xl font-bold text-primary">FinanceHub Pro</h1>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="homepage_financial_tools_platform.html" class="text-secondary-600 hover:text-primary transition-fast px-3 py-2 rounded-md text-sm">Home</a>
+                        <a href="financial_calculators_hub.html" class="text-secondary-600 hover:text-primary transition-fast px-3 py-2 rounded-md text-sm">Calculators</a>
+                        <a href="gst_calculator.html" class="text-primary font-medium px-3 py-2 rounded-md text-sm">GST Tools</a>
+                        <a href="gst_invoice_generator.html" class="text-secondary-600 hover:text-primary transition-fast px-3 py-2 rounded-md text-sm">Invoice</a>
+                        <a href="unit_converter.html" class="text-secondary-600 hover:text-primary transition-fast px-3 py-2 rounded-md text-sm">Converter</a>
+                        <a href="financial_education_center.html" class="text-secondary-600 hover:text-primary transition-fast px-3 py-2 rounded-md text-sm">Learn</a>
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button type="button" class="text-secondary-600 hover:text-primary focus:outline-none focus:text-primary transition-fast" onclick="toggleMobileMenu()">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Menu -->
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
+                    <a href="homepage_financial_tools_platform.html" class="text-secondary-600 hover:text-primary transition-fast block px-3 py-2 rounded-md text-base">Home</a>
+                    <a href="financial_calculators_hub.html" class="text-secondary-600 hover:text-primary transition-fast block px-3 py-2 rounded-md text-base">Calculators</a>
+                    <a href="gst_calculator.html" class="text-primary font-medium block px-3 py-2 rounded-md text-base">GST Tools</a>
+                    <a href="gst_invoice_generator.html" class="text-secondary-600 hover:text-primary transition-fast block px-3 py-2 rounded-md text-base">Invoice</a>
+                    <a href="unit_converter.html" class="text-secondary-600 hover:text-primary transition-fast block px-3 py-2 rounded-md text-base">Converter</a>
+                    <a href="financial_education_center.html" class="text-secondary-600 hover:text-primary transition-fast block px-3 py-2 rounded-md text-base">Learn</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section with Calculator -->
+    <section class="py-12 lg:py-20 bg-gradient-to-br from-primary-50 to-accent-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-primary mb-4">
+                    GST Calculator
+                </h1>
+                <p class="text-xl text-secondary-600 max-w-3xl mx-auto">
+                    Calculate GST amounts instantly with professional accuracy. Support for inclusive/exclusive calculations and all current GST rates.
+                </p>
+                <div class="flex items-center justify-center mt-6 space-x-6">
+                    <div class="flex items-center text-accent">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="font-medium">99.9% Accurate</span>
+                    </div>
+                    <div class="flex items-center text-accent">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span class="font-medium">Instant Results</span>
+                    </div>
+                    <div class="flex items-center text-accent">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <span class="font-medium">Secure & Private</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main GST Calculator -->
+            <div class="max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Calculator Input Section -->
+                    <div class="card p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold text-primary">Calculate GST</h2>
+                            <div class="flex items-center text-sm text-secondary-500">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Real-time calculation
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Amount Input -->
+                            <div>
+                                <label class="block text-sm font-semibold text-secondary-700 mb-3">Enter Amount (₹)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-500 font-mono">₹</span>
+                                    <input type="number" id="gst-amount" class="input-field pl-8 text-lg font-mono" placeholder="10,000" value="10000" min="0" step="0.01" />
+                                </div>
+                            </div>
+
+                            <!-- GST Type Selection -->
+                            <div>
+                                <label class="block text-sm font-semibold text-secondary-700 mb-3">GST Calculation Type</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="gst-type" value="exclusive" class="sr-only" checked />
+                                        <div class="gst-type-card p-4 border-2 border-primary bg-primary-50 rounded-lg transition-all">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <div class="font-semibold text-primary">Exclusive</div>
+                                                    <div class="text-sm text-secondary-600">Add GST to amount</div>
+                                                </div>
+                                                <div class="w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                                                    <div class="w-2 h-2 bg-white rounded-full"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label class="relative cursor-pointer">
+                                        <input type="radio" name="gst-type" value="inclusive" class="sr-only" />
+                                        <div class="gst-type-card p-4 border-2 border-secondary-200 bg-white rounded-lg transition-all hover:border-primary hover:bg-primary-50">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <div class="font-semibold text-secondary-700">Inclusive</div>
+                                                    <div class="text-sm text-secondary-600">Extract GST from amount</div>
+                                                </div>
+                                                <div class="w-4 h-4 border-2 border-secondary-300 rounded-full"></div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- GST Rate Selection -->
+                            <div>
+                                <label class="block text-sm font-semibold text-secondary-700 mb-3">GST Rate (%)</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="gst-rate" value="5" class="sr-only" />
+                                        <div class="gst-rate-card p-3 text-center border-2 border-secondary-200 rounded-lg transition-all hover:border-primary hover:bg-primary-50">
+                                            <div class="font-bold text-lg">5%</div>
+                                            <div class="text-xs text-secondary-600">Essential</div>
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="gst-rate" value="12" class="sr-only" />
+                                        <div class="gst-rate-card p-3 text-center border-2 border-secondary-200 rounded-lg transition-all hover:border-primary hover:bg-primary-50">
+                                            <div class="font-bold text-lg">12%</div>
+                                            <div class="text-xs text-secondary-600">Reduced</div>
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="gst-rate" value="18" class="sr-only" checked />
+                                        <div class="gst-rate-card p-3 text-center border-2 border-primary bg-primary-50 rounded-lg transition-all">
+                                            <div class="font-bold text-lg text-primary">18%</div>
+                                            <div class="text-xs text-primary">Standard</div>
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="gst-rate" value="28" class="sr-only" />
+                                        <div class="gst-rate-card p-3 text-center border-2 border-secondary-200 rounded-lg transition-all hover:border-primary hover:bg-primary-50">
+                                            <div class="font-bold text-lg">28%</div>
+                                            <div class="text-xs text-secondary-600">Luxury</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Calculate Button -->
+                            <button onclick="calculateGST()" class="btn-primary w-full py-4 text-lg font-semibold">
+                                <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                Calculate GST
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="lg:sticky lg:top-24 lg:self-start">
+                        <div class="card-result p-8 bg-gradient-to-br from-accent-50 to-primary-50">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-2xl font-bold text-primary">Calculation Results</h3>
+                                <div class="flex items-center text-sm text-accent font-medium">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Verified
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <!-- Original Amount -->
+                                <div class="bg-white p-4 rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-secondary-600 font-medium">Original Amount</span>
+                                        <span class="font-mono font-bold text-xl text-secondary-800" id="result-original">₹10,000</span>
+                                    </div>
+                                </div>
+
+                                <!-- GST Amount -->
+                                <div class="bg-white p-4 rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <span class="text-secondary-600 font-medium">GST Amount</span>
+                                            <div class="text-sm text-secondary-500" id="gst-rate-display">@ 18%</div>
+                                        </div>
+                                        <span class="font-mono font-bold text-xl text-accent" id="result-gst">₹1,800</span>
+                                    </div>
+                                </div>
+
+                                <!-- Total Amount -->
+                                <div class="bg-primary p-6 rounded-lg text-white">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <span class="text-primary-100 font-medium">Total Amount</span>
+                                            <div class="text-sm text-primary-200" id="calculation-type">GST Exclusive</div>
+                                        </div>
+                                        <span class="font-mono font-bold text-3xl" id="result-total">₹11,800</span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button onclick="copyResults()" class="btn-secondary py-3 text-sm">
+                                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                        </svg>
+                                        Copy Results
+                                    </button>
+                                    <button onclick="resetCalculator()" class="btn-accent py-3 text-sm">
+                                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                        </svg>
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GST Rate Finder Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-primary mb-4">GST Rate Finder</h2>
+                <p class="text-xl text-secondary-600 max-w-3xl mx-auto">
+                    Find the correct GST rate for your products or services with our comprehensive category guide.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 5% GST Category -->
+                <div class="card p-6 hover:shadow-modal transition-all duration-300">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-success-100 rounded-lg flex items-center justify-center">
+                            <span class="text-success-600 font-bold text-lg">5%</span>
+                        </div>
+                        <span class="text-sm text-success-600 font-medium">Essential Items</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-primary mb-3">Essential Goods</h3>
+                    <ul class="text-sm text-secondary-600 space-y-1">
+                        <li>• Food grains, cereals</li>
+                        <li>• Milk, curd, paneer</li>
+                        <li>• Sugar, tea, coffee</li>
+                        <li>• Medicines, drugs</li>
+                        <li>• Books, newspapers</li>
+                        <li>• Coal, natural gas</li>
+                    </ul>
+                </div>
+
+                <!-- 12% GST Category -->
+                <div class="card p-6 hover:shadow-modal transition-all duration-300">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center">
+                            <span class="text-warning-600 font-bold text-lg">12%</span>
+                        </div>
+                        <span class="text-sm text-warning-600 font-medium">Reduced Rate</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-primary mb-3">Reduced Rate Items</h3>
+                    <ul class="text-sm text-secondary-600 space-y-1">
+                        <li>• Processed food items</li>
+                        <li>• Ayurvedic medicines</li>
+                        <li>• Exercise books</li>
+                        <li>• Umbrella, walking sticks</li>
+                        <li>• Sewing machines</li>
+                        <li>• Mobile phones</li>
+                    </ul>
+                </div>
+
+                <!-- 18% GST Category -->
+                <div class="card p-6 hover:shadow-modal transition-all duration-300 border-2 border-primary">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                            <span class="text-primary font-bold text-lg">18%</span>
+                        </div>
+                        <span class="text-sm text-primary font-medium">Standard Rate</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-primary mb-3">Standard Rate Items</h3>
+                    <ul class="text-sm text-secondary-600 space-y-1">
+                        <li>• Most services</li>
+                        <li>• IT services</li>
+                        <li>• Restaurants (AC)</li>
+                        <li>• Soaps, toothpaste</li>
+                        <li>• Capital goods</li>
+                        <li>• Financial services</li>
+                    </ul>
+                </div>
+
+                <!-- 28% GST Category -->
+                <div class="card p-6 hover:shadow-modal transition-all duration-300">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-error-100 rounded-lg flex items-center justify-center">
+                            <span class="text-error-600 font-bold text-lg">28%</span>
+                        </div>
+                        <span class="text-sm text-error-600 font-medium">Luxury Items</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-primary mb-3">Luxury & Sin Goods</h3>
+                    <ul class="text-sm text-secondary-600 space-y-1">
+                        <li>• Luxury cars</li>
+                        <li>• Cigarettes, tobacco</li>
+                        <li>• Aerated drinks</li>
+                        <li>• Dishwashers, AC</li>
+                        <li>• Perfumes, cosmetics</li>
+                        <li>• Gaming equipment</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Educational Content Section -->
+    <section class="py-16 bg-surface">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                <!-- GST Basics -->
+                <div>
+                    <h2 class="text-3xl font-bold text-primary mb-6">Understanding GST Calculations</h2>
+                    <div class="space-y-6">
+                        <div class="card p-6">
+                            <h3 class="text-xl font-semibold text-primary mb-3">What is GST?</h3>
+                            <p class="text-secondary-600 leading-relaxed">
+                                Goods and Services Tax (GST) is a comprehensive indirect tax levied on the supply of goods and services in India. It replaced multiple cascading taxes and created a unified tax structure across the country.
+                            </p>
+                        </div>
+
+                        <div class="card p-6">
+                            <h3 class="text-xl font-semibold text-primary mb-3">GST Exclusive vs Inclusive</h3>
+                            <div class="space-y-4">
+                                <div class="bg-accent-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-accent mb-2">GST Exclusive</h4>
+                                    <p class="text-secondary-600 text-sm">GST is added to the base amount. Formula: Total = Amount + (Amount × GST Rate)</p>
+                                </div>
+                                <div class="bg-primary-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-primary mb-2">GST Inclusive</h4>
+                                    <p class="text-secondary-600 text-sm">GST is extracted from the total amount. Formula: GST = Total × GST Rate ÷ (100 + GST Rate)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-6">
+                            <h3 class="text-xl font-semibold text-primary mb-3">Practical Examples</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-secondary-100">
+                                    <span class="text-secondary-600">Product: ₹1,000 + 18% GST</span>
+                                    <span class="font-mono font-semibold">₹1,180</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-secondary-100">
+                                    <span class="text-secondary-600">Service: ₹5,000 + 18% GST</span>
+                                    <span class="font-mono font-semibold">₹5,900</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-secondary-600">Luxury: ₹10,000 + 28% GST</span>
+                                    <span class="font-mono font-semibold">₹12,800</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Tool -->
+                <div>
+                    <h2 class="text-3xl font-bold text-primary mb-6">GST Rate Comparison</h2>
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold text-primary mb-4">Compare GST Impact</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-secondary-700 mb-2">Base Amount (₹)</label>
+                                <input type="number" id="comparison-amount" class="input-field" placeholder="10,000" value="10000" />
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-success-50 rounded-lg">
+                                    <div>
+                                        <span class="font-medium text-success-700">5% GST</span>
+                                        <div class="text-sm text-success-600">Essential goods</div>
+                                    </div>
+                                    <span class="font-mono font-bold text-success-700" id="compare-5">₹10,500</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center p-3 bg-warning-50 rounded-lg">
+                                    <div>
+                                        <span class="font-medium text-warning-700">12% GST</span>
+                                        <div class="text-sm text-warning-600">Reduced rate</div>
+                                    </div>
+                                    <span class="font-mono font-bold text-warning-700" id="compare-12">₹11,200</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center p-3 bg-primary-50 rounded-lg">
+                                    <div>
+                                        <span class="font-medium text-primary">18% GST</span>
+                                        <div class="text-sm text-primary-600">Standard rate</div>
+                                    </div>
+                                    <span class="font-mono font-bold text-primary" id="compare-18">₹11,800</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center p-3 bg-error-50 rounded-lg">
+                                    <div>
+                                        <span class="font-medium text-error-700">28% GST</span>
+                                        <div class="text-sm text-error-600">Luxury goods</div>
+                                    </div>
+                                    <span class="font-mono font-bold text-error-700" id="compare-28">₹12,800</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trust Signals -->
+                    <div class="mt-8 space-y-4">
+                        <div class="card p-4">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="CA Testimonial" class="w-12 h-12 rounded-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;" />
+                                <div class="flex-1">
+                                    <p class="text-sm text-secondary-700">"Accurate GST calculations that match our professional software. Essential tool for our practice."</p>
+                                    <div class="mt-2">
+                                        <p class="font-semibold text-primary text-sm">CA Rajesh Gupta</p>
+                                        <p class="text-xs text-secondary-500">Chartered Accountant, Delhi</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-4">
+                            <div class="flex items-start space-x-3">
+                                <img src="https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Business Owner" class="w-12 h-12 rounded-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;" />
+                                <div class="flex-1">
+                                    <p class="text-sm text-secondary-700">"Saves me hours every week. Perfect for quick GST calculations and client quotations."</p>
+                                    <div class="mt-2">
+                                        <p class="font-semibold text-primary text-sm">Priya Sharma</p>
+                                        <p class="text-xs text-secondary-500">Small Business Owner, Mumbai</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Related Tools Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-primary mb-4">Related Financial Tools</h2>
+                <p class="text-xl text-secondary-600">Explore other tools to complete your financial calculations</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- GST Invoice Generator -->
+                <div class="card p-6 hover:shadow-modal transition-all duration-300 group cursor-pointer" onclick="window.location.href='gst_invoice_generator.html'">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center group-hover:bg-accent-200 transition-colors">
+                            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <span class="text-sm text-accent font-medium">Popular</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-primary mb-2">GST Invoice Generator</h3>
+                    <p class="text-secondary-600 mb-4">Create professional GST invoices with automatic calculations and instant PDF download.</p>
+                    <div class="flex items-center text-primary font-medium group-hover:text-accent transition-colors">
+                        <span>Create Invoice</span>
+                        <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Unit Converter -->
+                <div class="card p-6 hover:shadow-modal transition-all duration-300 group cursor-pointer" onclick="window.location.href='unit_converter.html'">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary-200 transition-colors">
+                            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                            </svg>
+                        </div>
+                        <span class="text-sm text-primary font-medium">Useful</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-primary mb-2">Currency Converter</h3>
+                    <p class="text-secondary-600 mb-4">Convert currencies with live exchange rates for international business calculations.</p>
+                    <div class="flex items-center text-primary font-medium group-hover:text-accent transition-colors">
+                        <span>Convert Currency</span>
+                        <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Financial Calculators -->
+                <div class="card p-6 hover:shadow-modal transition-all duration-300 group cursor-pointer" onclick="window.location.href='financial_calculators_hub.html'">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-warning-100 rounded-lg flex items-center justify-center group-hover:bg-warning-200 transition-colors">
+                            <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="text-sm text-warning-600 font-medium">Explore</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-primary mb-2">More Calculators</h3>
+                    <p class="text-secondary-600 mb-4">Access SIP, EMI, compound interest, and other financial planning calculators.</p>
+                    <div class="flex items-center text-primary font-medium group-hover:text-accent transition-colors">
+                        <span>Explore Tools</span>
+                        <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="lg:col-span-1">
+                    <div class="flex items-center mb-4">
+                        <svg class="h-8 w-8 text-white" viewBox="0 0 32 32" fill="currentColor">
+                            <path d="M16 2L3 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-13-5z"/>
+                            <path d="M14 14h4v2h-4v4h-2v-4H8v-2h4V8h2v6z" fill="#1e3a8a"/>
+                        </svg>
+                        <span class="ml-3 text-xl font-bold">FinanceHub Pro</span>
+                    </div>
+                    <p class="text-primary-200 mb-4">
+                        Professional financial tools that transform complex calculations into simple, visual experiences.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="javascript:void(0)" class="text-primary-200 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                            </svg>
+                        </a>
+                        <a href="javascript:void(0)" class="text-primary-200 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                            </svg>
+                        </a>
+                        <a href="javascript:void(0)" class="text-primary-200 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="gst_calculator.html" class="text-primary-200 hover:text-white transition-colors">GST Calculator</a></li>
+                        <li><a href="financial_calculators_hub.html" class="text-primary-200 hover:text-white transition-colors">SIP Calculator</a></li>
+                        <li><a href="financial_calculators_hub.html" class="text-primary-200 hover:text-white transition-colors">EMI Calculator</a></li>
+                        <li><a href="gst_invoice_generator.html" class="text-primary-200 hover:text-white transition-colors">Invoice Generator</a></li>
+                        <li><a href="unit_converter.html" class="text-primary-200 hover:text-white transition-colors">Unit Converter</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Resources</h3>
+                    <ul class="space-y-2">
+                        <li><a href="financial_education_center.html" class="text-primary-200 hover:text-white transition-colors">Financial Education</a></li>
+                        <li><a href="financial_education_center.html" class="text-primary-200 hover:text-white transition-colors">Blog</a></li>
+                        <li><a href="javascript:void(0)" class="text-primary-200 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="javascript:void(0)" class="text-primary-200 hover:text-white transition-colors">API Documentation</a></li>
+                        <li><a href="javascript:void(0)" class="text-primary-200 hover:text-white transition-colors">Business Solutions</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                    <ul class="space-y-2">
+                        <li class="text-primary-200">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            support@financehubpro.com
+                        </li>
+                        <li class="text-primary-200">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            +91 98765 43210
+                        </li>
+                        <li class="text-primary-200">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            Mumbai, India
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-primary-700 mt-12 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-primary-200 text-sm">
+                        © 2025 FinanceHub Pro. All Rights Reserved.
+                    </p>
+                    <div class="flex space-x-6 mt-4 md:mt-0">
+                        <a href="javascript:void(0)" class="text-primary-200 hover:text-white text-sm transition-colors">Privacy Policy</a>
+                        <a href="javascript:void(0)" class="text-primary-200 hover:text-white text-sm transition-colors">Terms of Service</a>
+                        <a href="javascript:void(0)" class="text-primary-200 hover:text-white text-sm transition-colors">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // GST Calculator functionality
+        function calculateGST() {
+            const amount = parseFloat(document.getElementById('gst-amount').value) || 0;
+            const gstType = document.querySelector('input[name="gst-type"]:checked').value;
+            const gstRate = parseFloat(document.querySelector('input[name="gst-rate"]:checked').value) || 18;
+
+            let originalAmount, gstAmount, totalAmount;
+
+            if (gstType === 'exclusive') {
+                originalAmount = amount;
+                gstAmount = (amount * gstRate) / 100;
+                totalAmount = amount + gstAmount;
+            } else {
+                totalAmount = amount;
+                gstAmount = (amount * gstRate) / (100 + gstRate);
+                originalAmount = amount - gstAmount;
+            }
+
+            // Update results
+            document.getElementById('result-original').textContent = `₹${originalAmount.toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+            document.getElementById('result-gst').textContent = `₹${gstAmount.toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+            document.getElementById('result-total').textContent = `₹${totalAmount.toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+            document.getElementById('gst-rate-display').textContent = `@ ${gstRate}%`;
+            document.getElementById('calculation-type').textContent = `GST ${gstType.charAt(0).toUpperCase() + gstType.slice(1)}`;
+
+            // Update comparison tool
+            updateComparison();
+        }
+
+        // Update comparison tool
+        function updateComparison() {
+            const amount = parseFloat(document.getElementById('comparison-amount').value) || 10000;
+            
+            document.getElementById('compare-5').textContent = `₹${(amount + (amount * 5 / 100)).toLocaleString('en-IN')}`;
+            document.getElementById('compare-12').textContent = `₹${(amount + (amount * 12 / 100)).toLocaleString('en-IN')}`;
+            document.getElementById('compare-18').textContent = `₹${(amount + (amount * 18 / 100)).toLocaleString('en-IN')}`;
+            document.getElementById('compare-28').textContent = `₹${(amount + (amount * 28 / 100)).toLocaleString('en-IN')}`;
+        }
+
+        // Copy results to clipboard
+        function copyResults() {
+            const original = document.getElementById('result-original').textContent;
+            const gst = document.getElementById('result-gst').textContent;
+            const total = document.getElementById('result-total').textContent;
+            const rate = document.getElementById('gst-rate-display').textContent;
+            
+            const results = `GST Calculation Results:\nOriginal Amount: ${original}\nGST Amount ${rate}: ${gst}\nTotal Amount: ${total}`;
+            
+            navigator.clipboard.writeText(results).then(() => {
+                // Show success message
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Copied!';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        // Reset calculator
+        function resetCalculator() {
+            document.getElementById('gst-amount').value = '10000';
+            document.querySelector('input[name="gst-type"][value="exclusive"]').checked = true;
+            document.querySelector('input[name="gst-rate"][value="18"]').checked = true;
+            
+            // Update UI
+            updateGSTTypeUI();
+            updateGSTRateUI();
+            calculateGST();
+        }
+
+        // Update GST type UI
+        function updateGSTTypeUI() {
+            const selectedType = document.querySelector('input[name="gst-type"]:checked').value;
+            const cards = document.querySelectorAll('.gst-type-card');
+            
+            cards.forEach((card, index) => {
+                const input = card.parentElement.querySelector('input');
+                if (input.checked) {
+                    card.classList.add('border-primary', 'bg-primary-50');
+                    card.classList.remove('border-secondary-200', 'bg-white');
+                    card.querySelector('.w-4').classList.add('bg-primary');
+                    card.querySelector('.w-4').classList.remove('border-2', 'border-secondary-300');
+                } else {
+                    card.classList.remove('border-primary', 'bg-primary-50');
+                    card.classList.add('border-secondary-200', 'bg-white');
+                    card.querySelector('.w-4').classList.remove('bg-primary');
+                    card.querySelector('.w-4').classList.add('border-2', 'border-secondary-300');
+                }
+            });
+        }
+
+        // Update GST rate UI
+        function updateGSTRateUI() {
+            const selectedRate = document.querySelector('input[name="gst-rate"]:checked').value;
+            const cards = document.querySelectorAll('.gst-rate-card');
+            
+            cards.forEach(card => {
+                const input = card.parentElement.querySelector('input');
+                if (input.checked) {
+                    card.classList.add('border-primary', 'bg-primary-50');
+                    card.classList.remove('border-secondary-200');
+                    card.querySelector('.font-bold').classList.add('text-primary');
+                    card.querySelector('.text-xs').classList.add('text-primary');
+                } else {
+                    card.classList.remove('border-primary', 'bg-primary-50');
+                    card.classList.add('border-secondary-200');
+                    card.querySelector('.font-bold').classList.remove('text-primary');
+                    card.querySelector('.text-xs').classList.remove('text-primary');
+                }
+            });
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial calculation
+            calculateGST();
+            
+            // Amount input listener
+            document.getElementById('gst-amount').addEventListener('input', calculateGST);
+            
+            // Comparison amount listener
+            document.getElementById('comparison-amount').addEventListener('input', updateComparison);
+            
+            // GST type radio listeners
+            document.querySelectorAll('input[name="gst-type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateGSTTypeUI();
+                    calculateGST();
+                });
+            });
+            
+            // GST rate radio listeners
+            document.querySelectorAll('input[name="gst-rate"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateGSTRateUI();
+                    calculateGST();
+                });
+            });
+            
+            // Initialize UI
+            updateGSTTypeUI();
+            updateGSTRateUI();
+            updateComparison();
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

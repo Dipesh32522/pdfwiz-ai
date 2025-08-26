@@ -1,227 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grocery Inflation Calculator 2025 - How Much Food Prices Increased | SmartCalcs</title>
-    <meta name="description" content="Check how much grocery prices have increased in India, USA, UK & Canada. Calculate inflation for milk, eggs, rice, bread & more. Free, accurate & mobile-friendly.">
-    <meta name="keywords" content="inflation calculator, grocery price rise, food inflation, price increase calculator, cost of living, SmartCalcs">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://smartcalcs.in/grocery-inflation-calculator.html">
-    
-    <!-- Open Graph / Social Sharing -->
-    <meta property="og:title" content="Grocery Inflation Calculator 2025 - See How Food Prices Increased">
-    <meta property="og:description" content="Calculate grocery price rise in your country. Milk, eggs, rice, bread & more.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://smartcalcs.in/grocery-inflation-calculator.html">
-    <meta property="og:image" content="https://smartcalcs.in/assets/og-grocery-inflation.jpg">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Grocery Inflation Calculator 2025">
-    <meta name="twitter:description" content="See how much your grocery bill has increased in the last year.">
-    <meta name="twitter:image" content="https://smartcalcs.in/assets/og-grocery-inflation.jpg">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-
-    <!-- Preload Critical Assets -->
-    <link rel="preload" href="/css/style.css" as="style">
-    <link rel="preload" href="/js/analytics.js" as="script">
-
-    <!-- Google Analytics -->
-    <script src="/js/analytics.js" async></script>
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FinanceHub Pro - Your Complete Financial Tools Platform</title>
+    <link rel="stylesheet" href="css/main.css" />
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-            background: #f9f9f9;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .form-group {
-            margin: 20px 0;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        select, button {
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        button {
-            background: #27ae60;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #219653;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e8f5e9;
-            border-left: 4px solid #27ae60;
-            border-radius: 6px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-        footer {
+        
+        .redirect-container {
             text-align: center;
-            margin-top: 40px;
-            color: #7f8c8d;
-            font-size: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
         }
-        .note {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-top: 20px;
-            font-style: italic;
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .redirect-message {
+            color: #718096;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        
+        .manual-link {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+        
+        .manual-link:hover {
+            background: #5a67d8;
         }
     </style>
+<script type="module" src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Ffinancehub6748back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.8"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Grocery Price Inflation Calculator 2025</h1>
-        <p>See how much the price of everyday grocery items has increased in your country. Perfect for budgeting, understanding cost of living changes, and financial planning.</p>
-
-        <div class="form-group">
-            <label for="country">Select Your Country:</label>
-            <select id="country">
-                <option value="india">India</option>
-                <option value="usa">USA</option>
-                <option value="uk">United Kingdom</option>
-                <option value="canada">Canada</option>
-            </select>
+    <div class="redirect-container">
+        <div class="logo">FinanceHub Pro</div>
+        <div class="loading-spinner"></div>
+        <div class="redirect-message">
+            Redirecting to your financial tools platform...
         </div>
-
-        <div class="form-group">
-            <label for="item">Select Grocery Item:</label>
-            <select id="item">
-                <option value="milk">Milk (1 Liter)</option>
-                <option value="eggs">Eggs (12)</option>
-                <option value="rice">Rice (1 kg)</option>
-                <option value="bread">Bread (1 loaf)</option>
-                <option value="potatoes">Potatoes (1 kg)</option>
-                <option value="onions">Onions (1 kg)</option>
-            </select>
-        </div>
-
-        <button onclick="calculateInflation()">Calculate Price Rise</button>
-
-        <div id="result" class="result" style="display: none;"></div>
-
-        <p class="note">
-            Data based on official inflation reports (2023-2025). Prices are approximate average retail prices.
-        </p>
+        <p>If you're not redirected automatically, <a href="pages/homepage_financial_tools_platform.html" class="manual-link">click here</a></p>
     </div>
 
-    <footer>
-        <p>© 2025 <a href="https://smartcalcs.in">SmartCalcs.in</a> – Free Online Calculators for Everyone.</p>
-        <p><a href="https://smartcalcs.in">Back to Home</a></p>
-    </footer>
-
     <script>
-        // Grocery Inflation Data (Average % Increase 2023-2025)
-        const inflationData = {
-            india: {
-                milk: 18,
-                eggs: 22,
-                rice: 15,
-                bread: 17,
-                potatoes: 30,
-                onions: 45
-            },
-            usa: {
-                milk: 12,
-                eggs: 28,
-                rice: 8,
-                bread: 10,
-                potatoes: 14,
-                onions: 11
-            },
-            uk: {
-                milk: 16,
-                eggs: 24,
-                rice: 13,
-                bread: 19,
-                potatoes: 10,
-                onions: 15
-            },
-            canada: {
-                milk: 14,
-                eggs: 21,
-                rice: 9,
-                bread: 12,
-                potatoes: 13,
-                onions: 16
-            }
-        };
-
-        function calculateInflation() {
-            const country = document.getElementById('country').value;
-            const item = document.getElementById('item').value;
-            const resultDiv = document.getElementById('result');
-
-            const inflationRate = inflationData[country][item];
-            const itemName = document.getElementById('item').options[document.getElementById('item').selectedIndex].text;
-
-            let message = `In ${country.toUpperCase()}, the price of ${itemName} has increased by <strong>${inflationRate}%</strong> from 2023 to 2025.`;
-
-            if (inflationRate > 20) {
-                message += " This is a significant increase. Consider adjusting your monthly budget.";
-            } else if (inflationRate > 10) {
-                message += " This is a moderate increase. Keep an eye on future price changes.";
-            } else {
-                message += " This is a relatively stable price change.";
-            }
-
-            resultDiv.innerHTML = message;
-            resultDiv.style.display = 'block';
-        }
-    </script>
-
-    <!-- Structured Data for Google -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Grocery Inflation Calculator",
-      "description": "Calculate how much grocery prices have increased in India, USA, UK, and Canada from 2023 to 2025.",
-      "applicationCategory": "FinanceApplication",
-      "operatingSystem": "Any",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "creator": {
-        "@type": "Organization",
-        "name": "SmartCalcs",
-        "url": "https://smartcalcs.in"
-      },
-      "url": "https://smartcalcs.in/grocery-inflation-calculator.html"
-    }
+        // Redirect to the main homepage after 2 seconds
+        setTimeout(function() {
+            window.location.href = 'pages/homepage_financial_tools_platform.html';
+        }, 2000);
+        
+        // Fallback redirect on page load
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
+                    window.location.href = 'pages/homepage_financial_tools_platform.html';
+                }
+            }, 3000);
+        });
     </script>
 </body>
 </html>
